@@ -180,8 +180,8 @@ class Command(BaseCommand):
         # 1. Проверка дедлайнов — КАЖДЫЙ ЧАС
         scheduler.add_job(
             process_task_deadlines,
-            # trigger=CronTrigger(minute="0"),
-            trigger=CronTrigger(second="*/10"),
+            trigger=CronTrigger(minute="0"),
+            # trigger=CronTrigger(second="*/10"),
             id="task_deadlines",
             max_instances=1,
             replace_existing=True,
@@ -191,8 +191,8 @@ class Command(BaseCommand):
         # 2. Периодические события — КАЖДЫЙ ЧАС
         scheduler.add_job(
             process_periodic_events,
-            # trigger=CronTrigger(minute="0"),
-            trigger=CronTrigger(second="*/10"),
+            trigger=CronTrigger(minute="0"),
+            # trigger=CronTrigger(second="*/10"),
             id="periodic_events",
             max_instances=1,
             replace_existing=True,
@@ -202,8 +202,8 @@ class Command(BaseCommand):
         # 2. Напоминания о задачах — КАЖДЫЙ ЧАС
         scheduler.add_job(
             process_task_reminders,
-            # trigger=CronTrigger(hour="9"),
-            trigger=CronTrigger(second="*/10"),
+            trigger=CronTrigger(hour="9"),
+            # trigger=CronTrigger(second="*/10"),
             id="task_reminders",
             max_instances=1,
             replace_existing=True,
