@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+
+  <title>SCORM Wrapper</title>
+
+  <style>
+    html, body {
+      margin: 0; height: 100vh; overflow: hidden;
+    }
+    #scormFrame {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+
+  <script>
+    // Функция для чтения query параметров
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    // Сохраняем параметры из URL
+    window.task_id = getQueryParam('task_id');
+    window.course_id = getQueryParam('course_id');
+    window.user_id = getQueryParam('user_id');
+    const type = getQueryParam('type');
+
+    // Определяем URL SCORM пакета по типу
+    const mediaUrl = window.location.origin + '/media'
+
+    let scormPackageUrl = '';
+    if (type === 'ispring') {
+      scormPackageUrl = `${mediaUrl}/scorm_packages/${encodeURIComponent(window.course_id)}/res/index.html`;
+    } else if (type === 'articulate') {
+      scormPackageUrl = `${mediaUrl}/scorm_packages/${encodeURIComponent(window.course_id)}/index_lms.html`;
+    } else if (type === 'scroll') {
+      scormPackageUrl = `${mediaUrl}/scorm_packages/${encodeURIComponent(window.course_id)}/index.html`;
+    } else {
+      console.error('Неизвестный тип SCORM пакета:', type);
+      scormPackageUrl = 'about:blank';
+    }
+
+    // SCORM_API
+    function SCORM_API() {
+      const task_id = window.task_id;
+      const user_id = window.user_id;
+
+      this.Initialize = function() {
+        console.log("Initialize вызван для пользователя:", user_id, "и пакета:", course_id);
+        const data = { task_id, user_id };
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/scorm_initialize/', false); // Синхронный запрос
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify(data));
+        if (xhr.status === 200) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            return response.status === 'initialize_success' ? "true" : "false";
+          } catch (e) {
+            console.error('Ошибка в Initialize:', e);
+            return "false";
+          }
+        } else {
+          console.error('Ошибка в Initialize:', xhr.status);
+          return "false";
+        }
+      };
+
+      this.Terminate = function() {
+        console.log("Terminate вызван");
+        const data = { task_id, user_id };
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/scorm_finish/', false);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify(data));
+        if (xhr.status === 200) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            return response.status === 'finish_success' ? "true" : "false";
+          } catch (e) {
+            console.error('Ошибка в Terminate:', e);
+            return "false";
+          }
+        } else {
+          console.error('Ошибка в Terminate:', xhr.status);
+          return "false";
+        }
+      };
+
+      this.GetValue = function(element) {
+        console.log("GetValue вызван с элементом:", element);
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `/api/get_value/?task_id=${encodeURIComponent(task_id)}&user_id=${encodeURIComponent(user_id)}&element=${encodeURIComponent(element)}`, false);
+        xhr.send();
+        if (xhr.status === 200) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            return response[element] || "";
+          } catch (e) {
+            console.error('Ошибка в GetValue:', e);
+            return "";
+          }
+        } else {
+          console.error('Ошибка в GetValue:', xhr.status);
+          return "";
+        }
+      };
+
+      this.SetValue = function(element, value) {
+        console.log("SetValue вызван с элементом:", element, "и значением:", value);
+        const data = { task_id, user_id, [element]: value };
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/set_value/', false);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify(data));
+        if (xhr.status === 200) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            return response.status === 'set_value_success' ? "true" : "false";
+          } catch (e) {
+            console.error('Ошибка в SetValue:', e);
+            return "false";
+          }
+        } else {
+          console.error('Ошибка в SetValue:', xhr.status);
+          return "false";
+        }
+      };
+
+      this.Commit = function() {
+        console.log("Commit вызван");
+        const data = { task_id, user_id };
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/scorm_commit/', false);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify(data));
+        if (xhr.status === 200) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            return response.status === 'commit_success' ? "true" : "false";
+          } catch (e) {
+            console.error('Ошибка в Commit:', e);
+            return "false";
+          }
+        } else {
+          console.error('Ошибка в Commit:', xhr.status);
+          return "false";
+        }
+      };
+
+      this.GetLastError = function() {
+        console.log("GetLastError вызван");
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `/api/get_last_error/?task_id=${encodeURIComponent(task_id)}&user_id=${encodeURIComponent(user_id)}`, false);
+        xhr.send();
+        if (xhr.status === 200) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            return response.error_code || "0";
+          } catch (e) {
+            console.error('Ошибка в GetLastError:', e);
+            return "0";
+          }
+        } else {
+          console.error('Ошибка в GetLastError:', xhr.status);
+          return "0";
+        }
+      };
+
+      this.GetErrorString = function(errorCode) {
+        console.log("GetErrorString вызван с кодом ошибки:", errorCode);
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `/api/get_error_string/?error_code=${encodeURIComponent(errorCode)}`, false);
+        xhr.send();
+        if (xhr.status === 200) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            return response.error_string || "No error";
+          } catch (e) {
+            console.error('Ошибка в GetErrorString:', e);
+            return "No error";
+          }
+        } else {
+          console.error('Ошибка в GetErrorString:', xhr.status);
+          return "No error";
+        }
+      };
+
+      this.GetDiagnostic = function(errorCode) {
+        console.log("GetDiagnostic вызван с кодом ошибки:", errorCode);
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `/api/get_diagnostic/?error_code=${encodeURIComponent(errorCode)}`, false);
+        xhr.send();
+        if (xhr.status === 200) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            return response.diagnostic_info || "No diagnostic information";
+          } catch (e) {
+            console.error('Ошибка в GetDiagnostic:', e);
+            return "No diagnostic information";
+          }
+        } else {
+          console.error('Ошибка в GetDiagnostic:', xhr.status);
+          return "No diagnostic information";
+        }
+      };
+    }
+
+    // Создаем глобальный объект API
+    window.API_1484_11 = new SCORM_API();
+  </script>
+
+</head>
+<body>
+
+  <iframe
+    id="scormFrame"
+    src=""
+    allowfullscreen
+    webkitallowfullscreen
+  ></iframe>
+
+  <script>
+    const iframe = document.getElementById('scormFrame');
+
+    iframe.onload = function () {
+      console.log("Iframe загружен успешно");
+    };
+
+    iframe.onerror = function () {
+      console.error("Произошла ошибка при загрузке Iframe.");
+    };
+
+    iframe.onabort = function () {
+      console.error("Загрузка Iframe была прервана.");
+    };
+
+    iframe.src = scormPackageUrl;
+  </script>
+
+</body>
+</html>

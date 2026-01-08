@@ -1,0 +1,80 @@
+/* Заголовки */
+h1 {
+   font-weight: 700; /* Жирный для главного заголовка */
+   font-size: 32px;
+   margin-top: 24px;
+   margin-bottom: 16px;
+ }
+ 
+ h2 {
+   font-weight: 600; /* Полужирный для подзаголовка */
+   font-size: 24px;
+   margin-top: 20px; 
+   margin-bottom: 16px;
+ }
+ 
+ h3 {
+   font-weight: 500; /* Нормальный или легкий полужирный */
+   font-size: 20px;
+   margin-top: 16px; 
+   margin-bottom: 16px;
+ }
+ 
+ h4 {
+   font-weight: 500; 
+   font-size: 18px;
+   margin-top: 16px; 
+   margin-bottom: 16px;
+ }
+ 
+ h5 {
+   font-weight: 400; /* Нормальный */
+   font-size: 16px;
+   margin-top: 16px; 
+   margin-bottom: 16px;
+ }
+ 
+ h6 {
+   font-weight: 400; /* Нормальный */
+   font-size: 14px;
+   margin-top: 16px; 
+   margin-bottom: 16px;
+ }
+ 
+ /* Абзацы */
+ p {
+   margin-top: 0; 
+   margin-bottom: 16px; 
+ }
+ 
+ /* Списки */
+ ul, ol {
+   margin-top: 16px; /* Верхний отступ */
+   margin-bottom: 16px; /* Нижний отступ */
+   padding-inline-start: 20px; /* Отступ списка */
+ }
+ 
+ /* Элементы списков */
+ li {
+   margin-bottom: 8px; /* Нижний отступ */
+ }
+ 
+ /* Для первого элемента списка */
+ li:first-child {
+   margin-top: 0; /* Убираем верхний отступ у первого элемента */
+ }
+ 
+ /* Стили для ссылок в содержимом элементов сетки */
+ a {
+   color: var(--color-accent-rgb); /* Цвет ссылок */
+   transition: background-color 0.3s, color 0.3s, transform 0.2s, border 0.3s, border-radius 0.3s, box-shadow 0.3s, opacity 0.3s; /* Анимация */
+   text-decoration: underline; /* Подчеркивание */
+   font-weight: 500; /* Жирность текста */
+   word-wrap: break-word; /* Перенос слов */
+ }
+ 
+ /* Стили для ссылок в содержимом при наведении */
+ a:hover {
+   text-decoration: none; /* Убираем подчеркивание */
+   color: var(--color-accent-rgb-dark); /* Цвет ссылок при наведении */
+ }

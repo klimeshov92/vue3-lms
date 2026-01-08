@@ -1,0 +1,349 @@
+<template>
+
+  <div v-if="loading">
+
+    <div v-if="object" class="form-page">
+
+      <div class="form-header">
+        <h1>Редактирование аккаунта</h1>
+      </div>
+
+      <form @submit.prevent="saveChanges" class="form" id="edit-form">
+
+        <div class="form-field">
+          <label for="avatar" class="form-label">Аватар:</label>
+          <input type="file" id="avatar" @change="onFileChange" class="form-input" />
+          <div v-if="avatar_url" class="avatar-preview">
+            <span class="avatar-preview-text">Текущий аватар:</span>
+            <a :href="avatar_url" target="_blank" class="link" >{{ avatar_url }}</a>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="username" class="form-label">Имя пользователя:</label>
+          <input v-model="form.username" id="username" type="text" class="form-input" placeholder="Введите имя пользоваетля" required />
+          <span v-if="errors.username" class="error">{{ errors.username }}</span>
+        </div>
+
+        <div class="form-field">
+          <label for="email" class="form-label">Электронная почта:</label>
+          <input v-model="form.email" id="email" type="email" class="form-input" placeholder="Введите электронную почту" required />
+          <span v-if="errors.email" class="error">{{ errors.email }}</span>
+        </div>
+
+        <div class="form-field">
+          <label for="password" class="form-label">Пароль:</label>
+          <div class="password-wrapper">
+            <input 
+            v-model="form.password" 
+            :type="isPasswordVisible ? 'text' : 'password'"
+            id="password" 
+            class="form-input password-input"
+            placeholder="Введите пароль"
+            required 
+            />
+            <span class="toggle-password" @click="togglePasswordVisibility">{{ isPasswordVisible ? '👁️' : '👁️‍🗨️' }}</span>
+          </div>
+          <span v-if="errors.password" class="error">{{ errors.password }}</span>
+        </div>
+
+        <div class="form-field">
+          <label for="last_name" class="form-label">Фамилия:</label>
+          <input v-model="form.last_name" id="last_name" type="text" class="form-input" placeholder="Введите фамилию"/>
+        </div>
+
+        <div class="form-field">
+          <label for="first_name" class="form-label">Имя:</label>
+          <input v-model="form.first_name" id="first_name" type="text" class="form-input" placeholder="Введите имя"/>
+        </div>
+
+        <div class="form-field">
+          <label for="fathers_name" class="form-label">Отчество:</label>
+          <input v-model="form.fathers_name" id="fathers_name" type="text" class="form-input" placeholder="Введите отчество"/>
+        </div>
+
+        <div class="form-field">
+          <label for="is_active" class="form-label">Активен:</label>
+          <input v-model="form.is_active" id="is_active" type="checkbox" class="form-input" />
+        </div>
+
+        <div class="form-field">
+          <label for="is_staff" class="form-label">Пользователь административной панели:</label>
+          <input v-model="form.is_staff" id="is_staff" type="checkbox" class="form-input" />
+        </div>
+
+        <div class="form-field">
+          <label for="is_superuser" class="form-label">Суперпользователь:</label>
+          <input v-model="form.is_superuser" id="is_superuser" type="checkbox" class="form-input" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Права:</label>
+          <multiselect
+            v-model="form.user_permissions"
+            :options="permissions"
+            :multiple="true"
+            :close-on-select="false"
+            :clear-on-select="false"
+            :preserve-search="true"
+            placeholder="Выберите права"
+            label="name"
+            track-by="id"
+            :preselect-first="false"
+            :no-result="`Нет доступных`"
+            :select-label="``"
+            :deselect-label="``"
+            :selected-label="``"
+          >
+            <template #noOptions>
+              <span>Список пуст</span>
+            </template>
+            <template #noResult>
+              <span>Ничего не найдено</span>
+            </template>
+          </multiselect>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Группы:</label>
+          <multiselect
+            v-model="form.groups"
+            :options="groups"
+            :multiple="true"
+            :close-on-select="false"
+            :clear-on-select="false"
+            :preserve-search="true"
+            placeholder="Выберите группы"
+            label="name"
+            track-by="id"
+            :preselect-first="false"
+            :no-result="`Нет доступных`"
+            :select-label="``"
+            :deselect-label="``"
+            :selected-label="``"
+          >
+            <template #noOptions>
+              <span>Список пуст</span>
+            </template>
+            <template #noResult>
+              <span>Ничего не найдено</span>
+            </template>
+          </multiselect>
+        </div>
+      </form>
+
+      <div class="form-menu button-group">
+        <button type="submit" class="button" form="edit-form">Сохранить</button>
+        <button type="button" @click="cancelEdit" class="button">Отмена</button>
+      </div>
+    </div>
+
+    <div v-else class="none-card">
+      <div>Объект не найден</div>
+    </div>
+
+  </div>
+
+  <div v-else class="loading">
+    <div>Загрузка данных...</div>
+  </div>
+
+</template>
+
+<script setup>
+
+import { ref, reactive, onMounted } from 'vue';
+import axios from 'axios';
+import { useRoute, useRouter } from 'vue-router';
+import Multiselect from 'vue-multiselect';
+import '../assets/styles/custom-multiselect.css';
+import { baseUrl, isTokenValid } from '../utils/utils';
+
+const route = useRoute();
+const router = useRouter();
+
+const object = ref(null);
+const form = reactive({
+  username: '',
+  email: '',
+  password: '',
+  first_name: '',
+  last_name: '',
+  fathers_name: '',
+  is_active: false,
+  is_staff: false,
+  is_superuser: false,
+  user_permissions: [],
+  groups: [],
+});
+
+const loading = ref(false);
+
+const permissions = ref([]);
+const loadPermissions = async () => {
+  let token = localStorage.getItem('access_token');
+  const validToken = isTokenValid(token);
+  if (token && !validToken) { 
+    router.push({ name: 'Login' });
+    return;
+  }
+
+  try {
+    const response = await axios.get(`${baseUrl}/permissions/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    permissions.value = response.data.results || [];
+    console.log('Разрешения загружены:', permissions.value);
+  } catch (error) {
+    console.error('Ошибка загрузки разрешений:', error.response?.data || error.message);
+  }
+};
+
+const groups = ref([]);
+const loadGroups = async () => {
+  let token = localStorage.getItem('access_token');
+  const validToken = isTokenValid(token);
+  if (token && !validToken) { 
+    router.push({ name: 'Login' });
+    return;
+  }
+
+  try {
+    const response = await axios.get(`${baseUrl}/groups/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    groups.value = response.data.results || [];
+    console.log('Группы загружены:', groups.value);
+  } catch (error) {
+    console.error('Ошибка загрузки групп:', error.response?.data || error.message);
+  }
+};
+
+const fetchObject = async () => {
+  const id = route.params.id;
+  let token = localStorage.getItem('access_token');
+  const validToken = isTokenValid(token);
+  if (token && !validToken) { 
+    router.push({ name: 'Login' });
+    return;
+  }
+
+  try {
+    const response = await axios.get(`${baseUrl}/accounts/${id}/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    object.value = response.data;
+    console.log(`Объект успешно загружен:`, object.value);
+    Object.assign(form, object.value);
+    avatar_url.value = object.value.avatar || '';
+
+  } catch (error) {
+    console.error('Ошибка загрузки объекта:', error.response?.data || error.message);
+  }
+};
+
+const avatarFile = ref(null);
+const avatar_url = ref(null);
+const onFileChange = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    avatarFile.value = file;
+    avatar_url.value = URL.createObjectURL(file);
+  }
+};
+
+const isPasswordVisible = ref(false); 
+const togglePasswordVisibility = () => {
+  isPasswordVisible.value = !isPasswordVisible.value;
+};
+
+const errors = reactive({});
+const validateForm = () => {
+  errors.username = form.username ? '' : 'Имя пользователя обязательно!';
+  errors.email = form.email ? '' : 'Электронная почта обязательна!';
+  errors.password = form.password ? '' : 'Пароль обязателен!';
+  return Object.values(errors).every((err) => !err);
+};
+
+const saveChanges = async () => {
+  if (!validateForm()) {
+    console.error('Форма содержит ошибки:', errors);
+    return;
+  }
+
+  try {
+    const id = route.params.id;
+    let token = localStorage.getItem('access_token');
+    const validToken = isTokenValid(token);
+    if (token && !validToken) { 
+      router.push({ name: 'Login' });
+      return;
+    }
+
+    const jsonData = {
+      username: form.username,
+      email: form.email,
+      password: form.password,
+      first_name: form.first_name,
+      last_name: form.last_name,
+      fathers_name: form.fathers_name,
+      is_active: form.is_active,
+      is_staff: form.is_staff,
+      is_superuser: form.is_superuser,
+      user_permissions: form.user_permissions.map(item => item.id),
+      groups: form.groups.map(item => item.id),
+    };
+
+    console.log('JSON данные перед отправкой:', jsonData);
+
+    await axios.patch(`${baseUrl}/accounts/${id}/`, jsonData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    console.log('Данные обновлены');
+
+    if (avatarFile.value) {
+      const avatarFormData = new FormData();
+      avatarFormData.append('avatar', avatarFile.value);
+      const avatarPatchUrl = `${baseUrl}/accounts/${id}/`;
+      await axios.patch(avatarPatchUrl, avatarFormData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log('Аватар успешно обновлен');
+    }
+
+    console.log('Изменения сохранены');
+    router.push({ name: 'AccountDetail', params: { id: id } });
+  } catch (error) {
+    if (error.response && error.response.data) {
+      Object.assign(errors, error.response.data);
+      console.error('Ошибка при сохранении изменений:', error.response.data);
+    } else {
+      console.error('Ошибка при сохранении изменений:', error.message);
+    }
+  }
+};
+
+const cancelEdit = () => {
+  router.back();
+};
+
+
+onMounted(async () => {
+  console.log('Компонент смонтирован, начинаем загрузку данных...');
+  try {
+    await loadPermissions();
+    await loadGroups();
+    await fetchObject();
+    loading.value = true;
+  } catch (error) {
+    console.error('Ошибка при загрузке данных:', error);
+  }
+});
+
+</script>
