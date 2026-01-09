@@ -12,9 +12,10 @@
             <div class="material-content">
               <div v-html="state.object.content" class="tiptap"></div>
             </div>
-            <div v-if="state.canEditHomePage"class="detail-menu button-group">
+            <div v-if="state.canEditHomePage" class="detail-menu button-group">
 
-              <router-link 
+              <router-link
+                v-if="state.canEditHomePage" 
                 :to="{ name: 'HomePageEdit', params: { id: state.object.id } }"
                 class="button"
               >
@@ -22,6 +23,7 @@
               </router-link>
 
             </div>
+            <div v-else></div>
           </div>
         </div>
         

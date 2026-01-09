@@ -14,7 +14,8 @@
             </div>
             <div v-if="state.canEditPolicyPage" class="detail-menu button-group">
 
-              <router-link  
+              <router-link
+                v-if="state.canEditPolicyPage"  
                 :to="{ name: 'PolicyPageEdit', params: { id: state.object.id } }"
                 class="button"
               >
@@ -22,6 +23,7 @@
               </router-link>
 
             </div>
+            <div v-else></div>
           </div>
         </div>
         
