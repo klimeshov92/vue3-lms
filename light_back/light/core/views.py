@@ -831,6 +831,10 @@ def register_view(request):
                 self_registration = True
             )
 
+            # Добавление сотрудника в группу.
+            manager_group, _ = AccountsGroup.objects.get_or_create(name='SelfRegistration', type='system')
+            manager_group.user_set.add(user)
+
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
 
