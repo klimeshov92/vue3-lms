@@ -420,6 +420,8 @@ html, body {
   font-size: 32px;
   margin-top: 0px;
   margin-bottom: 0px;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .login-form {
@@ -854,6 +856,8 @@ html, body {
   font-size: 32px;
   margin-top: 32px;
   margin-bottom: 0px;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .analytic-header {
@@ -866,6 +870,8 @@ html, body {
   font-size: 32px;
   margin-top: 32px;
   margin-bottom: 32px;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .form {
@@ -1388,6 +1394,8 @@ textarea.form-input:disabled,
   font-size: 32px;
   margin-top: 32px;
   margin-bottom: 32px;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .list-inner {
@@ -1722,6 +1730,8 @@ textarea.form-input:disabled,
   font-size: 24px;
   margin-top: 0px;
   margin-bottom: 0px;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .question-manual {
@@ -2188,6 +2198,8 @@ textarea.answer-input:disabled,
   font-size: 32px;
   margin-top: 0px;
   margin-bottom: 0px;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .detail-card-info {

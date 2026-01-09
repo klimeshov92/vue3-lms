@@ -23,7 +23,7 @@
               </router-link>
 
             </div>
-            <div v-else></div>
+            <div></div>
           </div>
         </div>
         
