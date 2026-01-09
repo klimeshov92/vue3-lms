@@ -26,8 +26,11 @@ def assignment_task_create(instance, executor, task_template, plan=None):
             logger.debug(
                 f"Используем последнее взаимодействие с исполнителем {executor} для задачи {task_template.name}")
         else:
-            logger.debug("Нет последнего взаимодействия с этим исполнителем.")
-            return
+            instance.interaction = Interaction.objects.create(
+                object_type='account',
+                account=executor,
+            )
+            logger.debug(f"Создаём новое взаимодействие с исполнителем {executor} для задачи {task_template.name}")
 
     elif instance.interaction_type == 'new':
         instance.interaction = Interaction.objects.create(
