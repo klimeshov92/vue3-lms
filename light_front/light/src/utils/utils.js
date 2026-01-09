@@ -20,7 +20,7 @@ export const coreUrl = '';
 export const baseUrl = '/api';
 export const staticUrl = '/static';
 export const mediaUrl = '/media';
-export const frontendUrl = '';
+export const frontendUrl = 'https://light-lms.ru';
 
 export const formatDate = (dateString) => {
   const date = new Date(dateString);
