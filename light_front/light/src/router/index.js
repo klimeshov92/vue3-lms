@@ -7,7 +7,7 @@ import { baseUrl } from '../utils/utils';
 // Определяем массив маршрутов
 const routes = [
   {
-    path: '/home_page',
+    path: '/',
     name: 'HomePage',
     component: () => import('../views/HomePage.vue'),
     //meta: { requiresAuth: true },
