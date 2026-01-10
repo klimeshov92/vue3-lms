@@ -25,6 +25,7 @@
               <button type="button" @click="back" class="button">Назад</button>
 
             </div>
+            <div></div>
           </div>
         </div>
         

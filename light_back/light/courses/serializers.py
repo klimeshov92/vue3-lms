@@ -24,12 +24,26 @@ class CourseBaseSerializer(serializers.ModelSerializer):
     def get_str(self, obj):
         return f"{obj.name}"
 
+class LastTaskBaseSerializer(serializers.ModelSerializer):
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = Task
+        fields = '__all__'
+
+    def get_str(self, obj):
+        return f'{obj.get_task_type_display()} - {obj.name}'
+
+
 class CourseSerializer(serializers.ModelSerializer):
     constructor_type_display = serializers.SerializerMethodField()
     categories = CategoryBaseSerializer(many=True, required=False)
     avatar = serializers.ImageField(required=False)
     upload_file = serializers.FileField(required=False)
     str = serializers.SerializerMethodField()
+    last_task = serializers.SerializerMethodField()
     self_assignment_task_template = serializers.SerializerMethodField()
     accounts_group_object_permissions = serializers.SerializerMethodField()
     account_object_permissions = serializers.SerializerMethodField()
@@ -45,6 +59,13 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def get_str(self, obj):
         return f"{obj.name}"
+
+    def get_last_task(self, obj):
+        last_task = Task.objects.filter(
+            course_id=obj.id,
+            executor=self.context['request'].user,
+        ).order_by('-id').first()
+        return LastTaskBaseSerializer(last_task, context=self.context).data
 
     def get_self_assignment_task_template(self, obj):
         self_assignment_task_template = TaskTemplate.objects.filter(

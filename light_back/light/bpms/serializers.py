@@ -240,25 +240,25 @@ class TaskSerializer(serializers.ModelSerializer):
     def get_result(self, obj):
         if obj.task_type == 'common_task':
             result = obj.task_result
-            return TaskResultSerializer(result).data
+            return TaskResultSerializer(result, context=self.context).data
         elif obj.task_type == 'plan_implementation':
             result = obj.plan_result
-            return PlanResultSerializer(result).data
+            return PlanResultSerializer(result, context=self.context).data
         elif obj.task_type == 'news_reading':
             result = obj.new_result
-            return MaterialResultSerializer(result).data
+            return MaterialResultSerializer(result, context=self.context).data
         elif obj.task_type == 'material_review':
             result = obj.material_result
-            return MaterialResultSerializer(result).data
+            return MaterialResultSerializer(result, context=self.context).data
         elif obj.task_type == 'course_study':
             result = obj.course_result
-            return CourseResultSerializer(result).data
+            return CourseResultSerializer(result, context=self.context).data
         elif obj.task_type == 'test_taking':
             result = obj.test_result
-            return TestResultSerializer(result).data
+            return TestResultSerializer(result, context=self.context).data
         elif obj.task_type == 'event_participation':
             result = obj.event_result
-            return EventResultSerializer(result).data
+            return EventResultSerializer(result, context=self.context).data
 
     def get_outcomes(self, obj):
         outcomes = ControlElement.objects.filter(task_template=obj.task_template)

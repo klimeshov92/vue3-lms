@@ -37,8 +37,8 @@ SECRET_KEY = os.getenv(
 RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-DEBUG = os.getenv('DJANGO_DEBUG', '0') == '1'
+DEBUG = True
+# DEBUG = os.getenv('DJANGO_DEBUG', '0') == '1'
 
 # Разрешенные хосты.
 # ALLOWED_HOSTS = [
@@ -268,7 +268,7 @@ SESSION_COOKIE_HTTPONLY = True
 
 SIMPLE_JWT = {
     # Время жизни доступа (access token) в формате timedelta. По умолчанию 5 минут.
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
 
     # Время жизни обновления (refresh token) в формате timedelta. По умолчанию 1 день.
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),

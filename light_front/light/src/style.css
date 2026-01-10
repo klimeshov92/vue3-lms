@@ -1463,7 +1463,6 @@ textarea.form-input:disabled,
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap:16px;
 }
 
 .list-card-top {
@@ -1524,6 +1523,7 @@ textarea.form-input:disabled,
 }
 
 .list-card-icons{
+  margin-top: 16px;
   padding: 0px 16px;
   display: flex;
   flex-direction: column;
@@ -1580,7 +1580,7 @@ textarea.form-input:disabled,
 }
 
 .list-card-text {
-  padding: 0px 16px;
+  padding: 16px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -2207,7 +2207,7 @@ textarea.answer-input:disabled,
   display: flex;
   flex-direction: column;
   max-width: 100%;
-  gap: 24px; 
+  gap: 20px; 
 }
 
 .detail-card-text {
@@ -2273,7 +2273,7 @@ textarea.answer-input:disabled,
   gap: 16px;
   margin-top: auto;
   flex-wrap: wrap;
-  padding-top: 24px;
+  padding-top: 20px;
 }
 
 .detail-tabs {
@@ -2355,6 +2355,17 @@ textarea.answer-input:disabled,
   word-break: break-word;
   box-sizing: border-box;
   border: 1px solid var(--color-grey-medium-light);
+}
+
+.content-menu {
+  display: flex;
+  text-align: center;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 16px;
+  margin-top: auto;
+  flex-wrap: wrap;
+  padding-top: 24px;
 }
 
 .detail-tab {

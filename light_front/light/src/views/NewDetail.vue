@@ -25,6 +25,14 @@
             </div>
             <div class="detail-menu button-group">
 
+              <router-link 
+                v-if="state.object.last_task" 
+                :to="{ name: 'TaskDetail', params: { id: state.object.last_task.id } }"
+                class="button"
+              >
+                Ознакомиться
+              </router-link>
+
               <button 
                 v-if="state.canSelfAssignment" 
                 @click="selfAssignment(state.object.self_assignment_task_template)"

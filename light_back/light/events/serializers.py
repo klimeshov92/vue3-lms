@@ -107,10 +107,23 @@ class EventSlotBaseSerializer(serializers.ModelSerializer):
     def get_str(self, obj):
         return f'{obj.event_template.name} - {obj.planned_start.strftime("%d.%m.%Y %H:%M")}'
 
+class LastTaskBaseSerializer(serializers.ModelSerializer):
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = Task
+        fields = '__all__'
+
+    def get_str(self, obj):
+        return f'{obj.get_task_type_display()} - {obj.name}'
+
 class EventSlotSerializer(serializers.ModelSerializer):
     event_template = EventTemplateSerializer(required=False)
     status_display = serializers.SerializerMethodField()
     str = serializers.SerializerMethodField()
+    last_task = serializers.SerializerMethodField()
     self_assignment_task_template = serializers.SerializerMethodField()
     accounts_group_object_permissions = serializers.SerializerMethodField()
     account_object_permissions = serializers.SerializerMethodField()
@@ -126,6 +139,13 @@ class EventSlotSerializer(serializers.ModelSerializer):
 
     def get_str(self, obj):
         return f'{obj.event_template.name} - {obj.planned_start.strftime("%d.%m.%Y %H:%M")}'
+
+    def get_last_task(self, obj):
+        last_task = Task.objects.filter(
+            event_slot_id=obj.id,
+            executor=self.context['request'].user,
+        ).order_by('-id').first()
+        return LastTaskBaseSerializer(last_task, context=self.context).data
 
     def get_self_assignment_task_template(self, obj):
         self_assignment_task_template = TaskTemplate.objects.filter(
