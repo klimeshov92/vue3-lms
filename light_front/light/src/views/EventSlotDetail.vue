@@ -41,7 +41,7 @@
                 :to="{ name: 'TaskDetail', params: { id: state.object.last_task.id } }"
                 class="button"
               >
-                 Открыть
+                 К задаче
               </router-link>
 
               <button 

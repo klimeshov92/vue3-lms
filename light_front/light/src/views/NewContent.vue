@@ -6,7 +6,7 @@
           <div class="detail-card-info">
             <div class="detail-header"> 
               <div class="detail-header-title">
-                <h1>{{ state.object.name || 'Безымянная новость' }}</h1>
+                <h1>{{ state.object.task.new.name || 'Безымянная новость' }}</h1>
               </div>
             </div>
             <div class="material-content">
