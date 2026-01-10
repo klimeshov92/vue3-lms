@@ -17,7 +17,7 @@ venv/
 # =========================
 staticfiles/
 media/
-debug.log
+debug.log*
 
 # =========================
 # Frontend
