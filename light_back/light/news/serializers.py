@@ -59,7 +59,7 @@ class NewSerializer(serializers.ModelSerializer):
             new_id=obj.id,
             executor=self.context['request'].user,
         ).order_by('-id').first()
-        return LastTaskBaseSerializer(last_task, context=self.context).data
+        return LastTaskBaseSerializer(last_task, context=self.context).data if last_task else None
 
     def get_self_assignment_task_template(self, obj):
         self_assignment_task_template = TaskTemplate.objects.filter(
