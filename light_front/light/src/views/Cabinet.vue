@@ -198,7 +198,7 @@
               <div v-else >
                 <div class="none-border">Нет настроек оповещений</div>
               </div>
-              <div class="tab-menu minibutton-group">
+              <div v-if="state.object.notification_settings" class="tab-menu minibutton-group">
                 <router-link 
                   :to="{ name: 'NotificationSettingsEdit', params: { id: state.object.notification_settings.id } }"
                   class="minibutton"
