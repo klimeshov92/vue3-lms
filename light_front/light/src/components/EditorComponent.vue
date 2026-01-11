@@ -349,11 +349,11 @@ export default {
     },
     addImage() {
       const url = prompt('Введите URL');
-      const height = prompt('Введите высоту изображения в пикселях (например, 500)');
+      const width = prompt('Введите ширину изображения в пикселях (например, 500)');
       if (url) {
         this.editor.chain().focus().setImage({
           src: url,
-          style: `height: ${height}px`,
+          style: `width: ${width}px`,
         }).run();
       }
     },
