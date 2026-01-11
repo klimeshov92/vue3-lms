@@ -209,7 +209,7 @@ const loadGroups = async () => {
   }
 
   try {
-    const response = await axios.get(`${baseUrl}/groups/`, {
+    const response = await axios.get(`${baseUrl}/account_groups/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     groups.value = response.data.results || [];
