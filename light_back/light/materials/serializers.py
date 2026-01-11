@@ -69,7 +69,8 @@ class MaterialSerializer(serializers.ModelSerializer):
         last_task = Task.objects.filter(
             material_id=obj.id,
             executor=self.context['request'].user,
-        ).order_by('-id').first()
+            material_result__isnull=False,
+        ).exclude(material_result__status__in=['canceled', 'failed']).order_by('-id').first()
         return LastTaskBaseSerializer(last_task, context=self.context).data if last_task else None
 
     def get_self_assignment_task_template(self, obj):

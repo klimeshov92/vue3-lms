@@ -23,7 +23,7 @@ from django.views.static import serve
 from django.views.decorators.clickjacking import xframe_options_exempt
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('api/admin/', admin.site.urls),
     path('api/', include('core.urls')),
     path('api/', include('bpms.urls')),
     path('api/', include('comments.urls')),

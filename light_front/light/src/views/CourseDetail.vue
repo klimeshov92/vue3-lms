@@ -21,16 +21,26 @@
             </div>
             <div class="detail-menu button-group">
 
+              <router-link
+                v-if="state.object.last_task"
+                :to="{ name: 'ScormContent', params: { id: state.object.last_task.id } }"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="button"
+              >
+                Пройти
+              </router-link>
+
               <router-link 
                 v-if="state.object.last_task" 
                 :to="{ name: 'TaskDetail', params: { id: state.object.last_task.id } }"
                 class="button"
               >
-                К задаче
+                Задача
               </router-link>
 
               <button 
-                v-if="state.canSelfAssignment"  
+                v-if="state.canSelfAssignment && !state.object.last_task" 
                 @click="selfAssignment(state.object.self_assignment_task_template)"
                 class="button"
               >

@@ -43,12 +43,21 @@
             <div class="detail-menu button-group">
 
               <router-link 
-                v-if="state.canEditEventTemplate" 
+                v-if="state.object.last_task" 
+                :to="{ name: 'TaskDetail', params: { id: state.object.last_task.id } }"
+                class="button"
+              >
+                Задача
+              </router-link>
+
+              <router-link 
+                v-if="state.canEditEventTemplate && !state.object.last_task" 
                 :to="{ name: 'EventTemplateEdit', params: { id: state.object.id } }"
                 class="button"
               >
                 Изменить
               </router-link>
+
               <button 
                 v-if="state.canDeleteEventTemplate" 
                 @click="openEventTemplateDeleteModal"

@@ -58,7 +58,8 @@ class NewSerializer(serializers.ModelSerializer):
         last_task = Task.objects.filter(
             new_id=obj.id,
             executor=self.context['request'].user,
-        ).order_by('-id').first()
+            new_result__isnull=False,
+        ).exclude(new_result__status__in=['canceled', 'failed']).order_by('-id').first()
         return LastTaskBaseSerializer(last_task, context=self.context).data if last_task else None
 
     def get_self_assignment_task_template(self, obj):

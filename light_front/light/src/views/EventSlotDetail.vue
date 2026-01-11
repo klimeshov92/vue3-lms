@@ -41,11 +41,11 @@
                 :to="{ name: 'TaskDetail', params: { id: state.object.last_task.id } }"
                 class="button"
               >
-                 К задаче
+                Задача
               </router-link>
 
               <button 
-                v-if="state.canSelfAssignment" 
+                v-if="state.canSelfAssignment && !state.object.last_task" 
                 @click="selfAssignment(state.object.self_assignment_task_template)"
                 class="button"
               >

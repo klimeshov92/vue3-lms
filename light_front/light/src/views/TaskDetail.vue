@@ -171,7 +171,7 @@
                 rel="noopener noreferrer"
                 class="button"
               >
-                Открыть
+                Открыть слот
               </a>
 
               <router-link

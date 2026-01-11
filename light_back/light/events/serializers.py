@@ -14,6 +14,18 @@ import os
 import logging
 logger = logging.getLogger('project')
 
+class LastTaskBaseSerializer(serializers.ModelSerializer):
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = Task
+        fields = '__all__'
+
+    def get_str(self, obj):
+        return f'{obj.get_task_type_display()} - {obj.name}'
+
 class EventTemplateBaseSerializer(serializers.ModelSerializer):
     admins = AccountBaseSerializer(many=True, required=False)
     str = serializers.SerializerMethodField()
@@ -33,6 +45,7 @@ class EventTemplateSerializer(serializers.ModelSerializer):
     categories = CategoryBaseSerializer(many=True, required=False)
     admins = AccountBaseSerializer(many=True, required=False)
     str = serializers.SerializerMethodField()
+    last_task = serializers.SerializerMethodField()
     accounts_group_object_permissions = serializers.SerializerMethodField()
     account_object_permissions = serializers.SerializerMethodField()
     creator = serializers.StringRelatedField()
@@ -47,6 +60,14 @@ class EventTemplateSerializer(serializers.ModelSerializer):
 
     def get_str(self, obj):
         return f'{obj.name}'
+
+    def get_last_task(self, obj):
+        last_task = Task.objects.filter(
+            event_template_id=obj.id,
+            executor=self.context['request'].user,
+            event_result__isnull=False,
+        ).exclude(event_result__status__in=['canceled', 'failed']).order_by('-id').first()
+        return LastTaskBaseSerializer(last_task, context=self.context).data if last_task else None
 
     def get_accounts_group_object_permissions(self, obj):
         content_type = ContentType.objects.get_for_model(obj.__class__)
@@ -107,18 +128,6 @@ class EventSlotBaseSerializer(serializers.ModelSerializer):
     def get_str(self, obj):
         return f'{obj.event_template.name} - {obj.planned_start.strftime("%d.%m.%Y %H:%M")}'
 
-class LastTaskBaseSerializer(serializers.ModelSerializer):
-    str = serializers.SerializerMethodField()
-    creator = serializers.StringRelatedField()
-    editor = serializers.StringRelatedField()
-
-    class Meta:
-        model = Task
-        fields = '__all__'
-
-    def get_str(self, obj):
-        return f'{obj.get_task_type_display()} - {obj.name}'
-
 class EventSlotSerializer(serializers.ModelSerializer):
     event_template = EventTemplateSerializer(required=False)
     status_display = serializers.SerializerMethodField()
@@ -144,7 +153,8 @@ class EventSlotSerializer(serializers.ModelSerializer):
         last_task = Task.objects.filter(
             event_slot_id=obj.id,
             executor=self.context['request'].user,
-        ).order_by('-id').first()
+            event_result__isnull=False,
+        ).exclude(event_result__status__in=['canceled', 'failed']).order_by('-id').first()
         return LastTaskBaseSerializer(last_task, context=self.context).data if last_task else None
 
     def get_self_assignment_task_template(self, obj):
