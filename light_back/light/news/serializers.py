@@ -41,7 +41,7 @@ class NewSerializer(serializers.ModelSerializer):
     avatar = serializers.ImageField(required=False)
     str = serializers.SerializerMethodField()
     last_task = serializers.SerializerMethodField()
-    assignment_task_template = serializers.SerializerMethodField()
+    self_assignment_task_template = serializers.SerializerMethodField()
     accounts_group_object_permissions = serializers.SerializerMethodField()
     account_object_permissions = serializers.SerializerMethodField()
     creator = serializers.StringRelatedField()
