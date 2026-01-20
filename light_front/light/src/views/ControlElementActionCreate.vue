@@ -411,8 +411,8 @@ const task_statuses = [
 ];
 
 const target_tasks = [
-  { label: 'Последняя задача в рамках текущего взаимодействия', value: 'current' },
-  { label: 'Последняя задача в рамках всех взаимодействий', value: 'all' },
+  { label: 'В рамках текущего взаимодействия', value: 'current' },
+  { label: 'В рамках всех взаимодействий', value: 'all' },
 ];
 
 const target_interactions = [
@@ -609,15 +609,6 @@ watch(
       form.delay_type = '';
       form.delay_value = null;
     }
-    if (newValue.value != 'assign_task') {
-      form.target_interaction = '';
-      form.executor_type = '';
-      form.executor = null;
-      form.controller_group = null;
-      form.observer_group = null;
-      form.delay_type = '';
-      form.delay_value = null;
-    }
     if (newValue.value != 'add_task_to_queue') {
       form.queue = null;
     }
@@ -696,17 +687,17 @@ const createObject = async () => {
       item: form.item,
       action_type: form.action_type.value,
       task_template: form.task_template?.id || null,
-      task_status: form.task_status.value,
+      task_status: form.task_status?.value || '',
       task_outcome: form.task_outcome?.id || null,
-      target_interaction: form.target_interaction.value,
-      target_task: form.target_task.value,
+      target_interaction: form.target_interaction?.value || '',
+      target_task: form.target_task?.value || '',
       target_group: form.target_group?.id || null,
-      executor_type: form.executor_type.value,
+      executor_type: form.executor_type?.value || '',
       executor: form.executor?.id || null,
       manager_control: form.manager_control,
       controller_group: form.controller_group?.id || null,
       observer_group: form.observer_group?.id || null,
-      delay_type: form.delay_type.value,
+      delay_type: form.delay_type?.value || '',
       delay_value: form.delay_value,
       queue: form.queue?.id || null,
     };

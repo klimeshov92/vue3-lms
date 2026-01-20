@@ -493,6 +493,80 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/public_tasks',
+    name: 'PublicTaskList',
+    component: () => import('../views/PublicTaskList.vue'),
+    //meta: { requiresAuth: true },
+    props: route => ({
+      page: parseInt(route.query.page, 10) || 1,
+      filters: {
+        name: route.query.name || '',
+        categories: route.query.categories
+        ? route.query.categories.map(category => ({ id: parseInt(category, 10) }))
+        : [],
+        order: route.query.order || 'name',
+      }
+    }),
+  },
+  {
+    path: '/public_tasks/create',
+    name: 'PublicTaskCreate',
+    component: () => import('../views/PublicTaskCreate.vue'),
+    meta: { requiresAuth: true },
+    //props: (route) => ({ planId: route.query.planId })
+  },
+  {
+    path: '/public_tasks/:id',
+    name: 'PublicTaskDetail',
+    component: () => import('../views/PublicTaskDetail.vue'),
+    //meta: { requiresAuth: true },
+    props: (route) => ({ activeTab: route.query.tab || 'details' })
+  },
+  {
+    path: '/public_tasks/:id/edit',
+    name: 'PublicTaskEdit',
+    component: () => import('../views/PublicTaskEdit.vue'),
+    meta: { requiresAuth: true },
+    //props: (route) => ({ planId: route.query.planId })
+  },
+  {
+    path: '/public_plans',
+    name: 'PublicPlanList',
+    component: () => import('../views/PublicPlanList.vue'),
+    //meta: { requiresAuth: true },
+    props: route => ({
+      page: parseInt(route.query.page, 10) || 1,
+      filters: {
+        name: route.query.name || '',
+        categories: route.query.categories
+        ? route.query.categories.map(category => ({ id: parseInt(category, 10) }))
+        : [],
+        order: route.query.order || 'name',
+      }
+    }),
+  },
+  {
+    path: '/public_plans/create',
+    name: 'PublicPlanCreate',
+    component: () => import('../views/PublicPlanCreate.vue'),
+    meta: { requiresAuth: true },
+    //props: (route) => ({ planId: route.query.planId })
+  },
+  {
+    path: '/public_plans/:id',
+    name: 'PublicPlanDetail',
+    component: () => import('../views/PublicPlanDetail.vue'),
+    //meta: { requiresAuth: true },
+    props: (route) => ({ activeTab: route.query.tab || 'details' })
+  },
+  {
+    path: '/public_plans/:id/edit',
+    name: 'PublicPlanEdit',
+    component: () => import('../views/PublicPlanEdit.vue'),
+    meta: { requiresAuth: true },
+    //props: (route) => ({ planId: route.query.planId })
+  },
+  {
     path: '/tasks',
     name: 'TaskList',
     component: () => import('../views/TaskList.vue'),

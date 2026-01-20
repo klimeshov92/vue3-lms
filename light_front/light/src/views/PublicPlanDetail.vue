@@ -1,29 +1,25 @@
 <template>
   <div v-if="loading">
-    <div v-if="state.canViewTopic" class="detail-page">
+    <div v-if="state.canViewPublicPlan" class="detail-page">
       <div v-if="state.object.id">
         <div class="detail-card"> 
+          <div class="detail-card-image-outer">
+            <div v-if="state.object.avatar" class="detail-card-image-inner">
+              <img :src="state.object.avatar || '/default-avatar.png'" alt="Аватар" />
+            </div>
+            <div v-else class="detail-card-image-none">
+              <span class="none-text">Нет аватара</span>
+            </div>
+          </div>
           <div class="detail-card-info">
             <div class="detail-header"> 
-              <div v-if="state.object.topic_type == 'common_topic'" class="detail-header-title">
-                <h1>{{ state.object.name || 'Безымянный топик' }}</h1>
-              </div>
-              <div v-if="state.object.topic_type == 'task_topic'" class="detail-header-title">
-                <h1>{{ state.object.task?.str || 'Безымянный топик' }}</h1>
-              </div>
-              <div v-if="state.object.topic_type == 'queue_topic'" class="detail-header-title">
-                <h1>{{ state.object.queue?.str || 'Безымянный топик' }}</h1>
+              <div class="detail-header-title">
+                <h1>{{ state.object.name || 'Безымянный план' }}</h1>
               </div>
             </div>
             <div class="detail-card-text">
               <div class="detail-card-text-elem">
-                <span class="detail-card-text-label">Тип топика:</span> {{ state.object.topic_type_display || 'Нет типа топика' }}
-              </div>
-              <div v-if="state.object.topic_type == 'task_topic'" class="detail-card-text-elem">
-                <span class="detail-card-text-label">Задача:</span> {{ state.object.task ? state.object.task.str : 'Нет задачи' }}
-              </div>
-              <div v-if="state.object.topic_type == 'queue_topic'" class="detail-card-text-elem">
-                <span class="detail-card-text-label">Очередь:</span> {{ state.object.queue ? state.object.queue.str : 'Нет очереди' }}
+                <span class="detail-card-text-label">Шаблон задачи:</span> {{ state.object.task_template ? state.object.task_template.str : 'Нет плана' }}
               </div>
               <div class="detail-card-text-elem">
                 <span class="detail-card-text-label">Категории:</span>
@@ -31,16 +27,34 @@
               </div>
             </div>
             <div class="detail-menu button-group">
+
               <router-link 
-                v-if="state.canEditTopic" 
-                :to="{ name: 'TopicEdit', params: { id: state.object.id } }"
+                v-if="state.object.last_task" 
+                :to="{ name: 'TaskDetail', params: { id: state.object.last_task.id } }"
+                class="button"
+              >
+                Задача
+              </router-link>
+
+              <button 
+                v-if="state.canSelfAssignment && !state.object.last_task" 
+                @click="selfAssignment(state.object.task_template)"
+                class="button"
+              >
+                Самоназначение
+              </button>
+
+              <router-link 
+                v-if="state.canEditPublicPlan" 
+                :to="{ name: 'PublicPlanEdit', params: { id: state.object.id } }"
                 class="button"
               >
                 Изменить
               </router-link>
+
               <button 
-                v-if="state.canDeleteTopic" 
-                @click="openTopicDeleteModal"
+                v-if="state.canDeletePublicPlan" 
+                @click="openPublicPlanDeleteModal"
                 class="button"
               >
                 Удалить
@@ -48,20 +62,20 @@
 
               <button type="button" @click="back" class="button">Назад</button>
             </div>
-            <div v-if="showTopicDeleteModal" class="modal-overlay">
+            <div v-if="showPublicPlanDeleteModal" class="modal-overlay">
               <div class="modal">
                 <div class="modal-header">
-                  <h2 class="modal-header-h2">Удаление {{ state.object.name || 'Безымянный топик' }}</h2>
+                  <h2 class="modal-header-h2">Удаление {{ state.object.username || 'Безымянная учетная запись' }}</h2>
                 </div>
                 <div class="minibutton-group modal-menu">
-                  <button @click="confirmTopicDelete()" class="minibutton">Подтвердить</button>
-                  <button @click="closeTopicDeleteModal" class="minibutton">Отменить</button>
+                  <button @click="confirmPublicPlanDelete()" class="minibutton">Подтвердить</button>
+                  <button @click="closePublicPlanDeleteModal" class="minibutton">Отменить</button>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
-        
         <div class="detail-tabs">
           <div class="tabs-header">
             <button 
@@ -74,7 +88,6 @@
               {{ tab.label }}
             </button>
           </div>
-
           <div v-if="activeTab" class="tabs-content">
 
             <div v-if="activeTab === 'desc'" class="desc-tab">
@@ -88,13 +101,7 @@
 
             <div v-if="activeTab === 'details'" class="detail-tab">
               <div class="detail-tab-elem">
-                <span class="detail-tab-label">Тип топика:</span> {{ state.object.topic_type_display || 'Нет типа топика' }}
-              </div>
-              <div v-if="state.object.topic_type == 'task_topic'" class="detail-tab-elem">
-                <span class="detail-tab-label">Задача:</span> {{ state.object.task ? state.object.task.str : 'Нет задачи' }}
-              </div>
-              <div v-if="state.object.topic_type == 'queue_topic'" class="detail-tab-elem">
-                <span class="detail-tab-label">Очередь:</span> {{ state.object.queue ? state.object.queue.str : 'Нет очереди' }}
+                <span class="detail-tab-label">Шаблон задачи:</span> {{ state.object.task_template ? state.object.task_template.str : 'Нет плана' }}
               </div>
               <div class="detail-tab-elem">
                 <span class="detail-tab-label">Категории:</span>
@@ -114,21 +121,15 @@
               </div>
             </div>
 
-            <div v-if="activeTab === 'messages'" class="topic-tab">
-              
-              <TopicMessages :topic_id="topic_id" />
-
-            </div>
-
             <div v-if="activeTab === 'accountsGroupObjectPermissions'" class="table-tab">
 
-              <AccountsGroupObjectPermissions :state="state" :fetchObject="fetchObject" :contentTypeModel="'topic'" />
+              <AccountsGroupObjectPermissions :state="state" :fetchObject="fetchObject" :contentTypeModel="'public_plan'" />
 
             </div>
 
             <div v-if="activeTab === 'accountObjectPermissions'" class="table-tab">
 
-              <AccountObjectPermissions :state="state" :fetchObject="fetchObject" :contentTypeModel="'topic'" />
+              <AccountObjectPermissions :state="state" :fetchObject="fetchObject" :contentTypeModel="'public_plan'" />
 
             </div>
 
@@ -155,11 +156,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onBeforeUnmount, computed, watch } from 'vue';
+import { ref, reactive, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import { formatDate, formatDateTime, baseUrl, isTokenValid } from '../utils/utils'; 
-import TopicMessages from '../components/TopicMessages.vue';
 import AccountObjectPermissions from '../components/AccountObjectPermissions.vue';
 import AccountsGroupObjectPermissions from '../components/AccountsGroupObjectPermissions.vue'; 
 
@@ -172,11 +172,10 @@ const state = reactive({
   object: null,
   globalPermissionsList: [],
   objectPermissionsDict: {},
-  canAddTopic: false,
-  canViewTopic: false,
-  canEditTopic: false,
-  canDeleteTopic: false,
-  canDeleteMessageGlobal: false,
+  canViewPublicPlan: false,
+  canSelfAssignment: false,
+  canEditPublicPlan: false,
+  canDeletePublicPlan: false,
   canViewAccountObjectPermission: false,
   canAddAccountObjectPermission: false,
   canDeleteAccountObjectPermission: false,
@@ -185,7 +184,6 @@ const state = reactive({
   canDeleteAccountsGroupObjectPermission: false,
 });
 
-const topic_id = ref(null);
 const fetchObject = async () => {
   const id = route.params.id;
   let token = localStorage.getItem('access_token');
@@ -197,28 +195,26 @@ const fetchObject = async () => {
   }
  
   try {
-    const response = await axios.get(`${baseUrl}/topics/${id}/`, {
+    const response = await axios.get(`${baseUrl}/public_plans/${id}/`, {
       headers: {
         ...(token && { Authorization: `Bearer ${token}` })
       }
     });
-    console.log('Данные топика:', response.data); 
+    console.log('Данные плана:', response.data); 
     state.object = response.data;
-    topic_id.value = state.object.id; // Обновляем реактивную переменную topic_id
-    console.log('ID топика:', topic_id.value);
   } catch (error) {
-    console.error('Ошибка при получении данных топика:', error);
+    console.error('Ошибка при получении данных плана:', error);
   }
 };
 
-const showTopicDeleteModal = ref(false);
-const openTopicDeleteModal = () => {
-  showTopicDeleteModal.value = true;
+const showPublicPlanDeleteModal = ref(false);
+const openPublicPlanDeleteModal = () => {
+  showPublicPlanDeleteModal.value = true;
 };
-const closeTopicDeleteModal = () => {
-  showTopicDeleteModal.value = false;
+const closePublicPlanDeleteModal = () => {
+  showPublicPlanDeleteModal.value = false;
 };
-const confirmTopicDelete = async () => {
+const confirmPublicPlanDelete = async () => {
   let token = localStorage.getItem('access_token');
   const validToken = isTokenValid(token);
   if (token && !validToken) { 
@@ -228,13 +224,31 @@ const confirmTopicDelete = async () => {
 
   const id = route.params.id;
   try {
-    await axios.delete(`${baseUrl}/topics/${id}/`, {
+    await axios.delete(`${baseUrl}/public_plans/${id}/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    closeTopicDeleteModal();
-    router.push({ name: 'TopicList' });
+    closePublicPlanDeleteModal();
+    router.push({ name: 'PublicPlanList' });
   } catch (error) {
-    console.error('Ошибка удаления задачи:', error);
+    console.error('Ошибка удаления плана:', error);
+  }
+};
+
+const selfAssignment = async (id) => {
+  let token = localStorage.getItem('access_token');
+  const validToken = isTokenValid(token);
+  if (token && !validToken) { 
+    router.push({ name: 'Login' });
+    return;
+  }
+  try {
+    const self_assignment = await axios.post(`${baseUrl}/self_assignment/${id}/public_plan/${id}/`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    console.log('Самоназначение:', self_assignment.data); 
+    router.push({ name: 'TaskDetail', params: { id: self_assignment.data.id } });
+  } catch (error) {
+    console.error('Ошибка самоназначения:', error);
   }
 };
 
@@ -280,23 +294,23 @@ const loadUserPermissions = async () => {
     const id = route.params.id;
     console.log('ID объекта:', id);
 
-    state.canAddTopic = state.globalPermissionsList.includes('comments.add_topic');
-    console.log('Права на добавление топик:', state.canAddTopic);
+    state.canViewPublicPlan = state.globalPermissionsList.includes('bpms.view_public_plan') ||
+      (state.objectPermissionsDict['bpms.view_public_plan'] &&
+      state.objectPermissionsDict['bpms.view_public_plan'].includes(Number(id)));
+    console.log('Права на просмотр аккаунтов:', state.canViewPublicPlan);
 
-    state.canViewTopic = state.globalPermissionsList.includes('comments.view_topic') ||
-      (state.objectPermissionsDict['comments.view_topic'] &&
-      state.objectPermissionsDict['comments.view_topic'].includes(Number(id)));
-    console.log('Права на просмотр топика:', state.canViewTopic);
+    state.canSelfAssignment = state.canViewPublicPlan && state.object.self_assignment_task_template
+    console.log('Права на самоназначение:', state.canSelfAssignment);
 
-    state.canEditTopic = state.globalPermissionsList.includes('comments.change_topic') ||
-      (Array.isArray(state.objectPermissionsDict['comments.change_topic']) &&
-      state.objectPermissionsDict['comments.change_topic'].includes(Number(id)));
-    console.log('Права на редактирование топика:', state.canEditTopic);
+    state.canEditPublicPlan = state.globalPermissionsList.includes('bpms.change_public_plan') ||
+      (Array.isArray(state.objectPermissionsDict['bpms.change_public_plan']) &&
+      state.objectPermissionsDict['bpms.change_public_plan'].includes(Number(id)));
+    console.log('Права на редактирование аккаунтов:', state.canEditPublicPlan);
 
-    state.canDeleteTopic = state.globalPermissionsList.includes('comments.delete_topic') ||
-      (Array.isArray(state.objectPermissionsDict['comments.delete_topic']) &&
-      state.objectPermissionsDict['comments.delete_topic'].includes(Number(id)));
-    console.log('Права на удаление топика:', state.canDeleteTopic);
+    state.canDeletePublicPlan = state.globalPermissionsList.includes('bpms.delete_public_plan') ||
+      (Array.isArray(state.objectPermissionsDict['bpms.delete_public_plan']) &&
+      state.objectPermissionsDict['bpms.delete_public_plan'].includes(Number(id)));
+    console.log('Права на удаление аккаунтов:', state.canDeletePublicPlan);
 
     state.canViewAccountObjectPermission = state.globalPermissionsList.includes('core.view_account_object_permission');
     console.log('Права на просмотр объектных прав аккаунтов:', state.canViewAccountObjectPermission);
@@ -327,19 +341,17 @@ const back = () => {
 
 const tabs = computed(() => [
   { name: 'desc', label: 'Описание' },
-  { name: 'messages', label: 'Содержание' },
   { name: 'details', label: 'Детали' },
   state.canViewAccountsGroupObjectPermission ? { name: 'accountsGroupObjectPermissions', label: 'Объектные права групп' } : null,
   state.canViewAccountObjectPermission ? { name: 'accountObjectPermissions', label: 'Объектные права аккаунтов' } : null,
 ].filter(Boolean));
 
-const activeTab = ref(route.query.tab || localStorage.getItem(`activeTopicTab-${route.params.id}`) || 'desc');
+const activeTab = ref(route.query.tab || localStorage.getItem(`activePublicPlanTab-${route.params.id}`) || 'details');
 watch(activeTab, (newTab) => {
-  localStorage.setItem(`activeTopicTab-${route.params.id}`, newTab);
+  localStorage.setItem(`activePublicPlanTab-${route.params.id}`, newTab);
   router.push({ query: { tab: newTab } });
   console.log('Загружен таб:', newTab);
 });
-
 
 onMounted(async () => {
   console.log('Компонент смонтирован, начинаем загрузку данных...');
@@ -351,14 +363,6 @@ onMounted(async () => {
     console.error('Ошибка при загрузке данных:', error);
   }
 });
-
-watch(
-  () => route.params.id,
-  async (newId) => {
-    console.log('Параметр id изменился на:', newId);
-    await fetchObject();
-  }
-);
 
 </script>
 

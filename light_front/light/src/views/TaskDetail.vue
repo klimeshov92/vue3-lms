@@ -214,6 +214,8 @@
                 Удалить
               </button>
 
+              <button type="button" @click="back" class="button">Назад</button>
+
             </div>
 
             <div v-if="showTaskDeleteModal" class="modal-overlay">
@@ -768,6 +770,10 @@ const loadUserPermissions = async () => {
   } catch (error) {
     console.error('Ошибка при загрузке разрешений пользователя:', error);
   }
+};
+
+const back = () => {
+  router.back();
 };
 
 const tabs = computed(() => [

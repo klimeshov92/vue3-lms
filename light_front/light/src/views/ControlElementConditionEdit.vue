@@ -51,7 +51,7 @@
             :multiple="false"
             :close-on-select="true"
             :clear-on-select="true"
-            placeholder="Выберите условие"
+            placeholder="Выберите логический оператор"
             label="label"
             track-by="value"
             :preselect-first="false"
@@ -83,7 +83,7 @@
           <span v-if="errors.condition_type" class="error">{{ errors.condition_type }}</span>
         </div>
 
-        <div class="form-field" v-if="form.condition_type?.value == 'child_tasks_status' || form.condition_type?.value == 'task_status' || form.condition_type?.value == 'task_outcome'">
+        <div class="form-field" v-if="form.condition_type?.value == 'task_exists' || form.condition_type?.value == 'child_tasks_status' || form.condition_type?.value == 'task_status' || form.condition_type?.value == 'task_outcome'">
           <label class="form-label">Шаблон задачи:</label>
           <multiselect
             v-model="form.task_template"
@@ -110,7 +110,7 @@
           <span v-if="errors.task_template" class="error">{{ errors.task_template }}</span>
         </div>
 
-        <div class="form-field" v-if="form.condition_type?.value == 'child_tasks_status' || form.condition_type?.value == 'task_status' || form.condition_type?.value == 'task_outcome'">
+        <div class="form-field" v-if="form.condition_type?.value == 'task_exists' || form.condition_type?.value == 'child_tasks_status' || form.condition_type?.value == 'task_status' || form.condition_type?.value == 'task_outcome'">
           <label class="form-label">Целевая задача:</label>
           <multiselect
             v-model="form.target_task"
@@ -128,6 +128,11 @@
             :selected-label="``"
           />
           <span v-if="errors.target_task" class="error">{{ errors.target_task }}</span>
+        </div>
+
+        <div class="form-field"  v-if="form.condition_type?.value == 'task_exists'">
+          <label for="boolean_operator" class="form-label">Оператор сравнения:</label>
+          <input v-model="form.boolean_operator" id="boolean_operator" type="checkbox" class="form-input" />
         </div>
 
         <div class="form-field" v-if="form.condition_type?.value == 'child_tasks_status' || form.condition_type?.value == 'task_status' || form.condition_type?.value == 'task_outcome'">
@@ -249,6 +254,7 @@ const router = useRouter();
 const loading = ref(false);
 
 const condition_types = [
+  { label: 'Задача назначалась', value: 'task_exists' },
   { label: 'Статус дочерних задач', value: 'child_tasks_status' },
   { label: 'Статус задачи', value: 'task_status' },
   { label: 'Итог задачи', value: 'task_outcome' },
@@ -281,8 +287,8 @@ const task_statuses = [
 ];
 
 const target_tasks = [
-  { label: 'Последняя задача в рамках текущего взаимодействия', value: 'current' },
-  { label: 'Последняя задача в рамках всех взаимодействий', value: 'all' },
+  { label: 'В рамках текущего взаимодействия', value: 'current' },
+  { label: 'В рамках всех взаимодействий', value: 'all' },
 ];
 
 const object = ref(null);
@@ -292,6 +298,7 @@ const form = reactive({
   logic_operator: '',
   condition_type: '',
   task_template: null,
+  boolean_operator: false,
   comparison_operator: '',
   order_operator: '',
   task_status: '',
@@ -387,6 +394,11 @@ const fetchObject = async () => {
 watch(
   () => form.condition_type,
   (newValue) => {
+    if (newValue.value != 'task_exists') {
+      form.task_template = null;
+      form.target_task = '';
+      form.boolean_operator =  false;
+    }
     if (newValue.value != 'child_tasks_status' && newValue.value != 'task_status' && newValue.value != 'task_outcome') {
       form.task_template = null;
       form.comparison_operator = '';
@@ -420,6 +432,10 @@ const validateForm = () => {
   errors.item = form.item && form.item > 0 ? '' : 'Пункт обязателен и должен быть больше 0!';
   if (form.item != 1) {
     errors.logic_operator = form.logic_operator.value ? '' : 'Логический оператор обязателен!';
+  }
+  if (form.condition_type == 'task_exists') {
+    errors.task_template = form.task_template ? '' : 'Шаблон задачи обязателен!';
+    errors.target_task = form.target_task.value ? '' : 'Целевая задача обязательна!';
   }
   if (form.condition_type == 'child_tasks_status' || form.condition_type == 'task_status') {
     errors.task_template = form.task_template ? '' : 'Шаблон задачи обязателен!';
@@ -460,14 +476,15 @@ const saveChanges = async () => {
     const jsonData = {
       control_element: form.control_element.id,
       item: form.item,
-      logic_operator: form.logic_operator?.value || null,
+      logic_operator: form.logic_operator?.value || '',
+      boolean_operator: form.boolean_operator,
       condition_type: form.condition_type.value,
       task_template: form.task_template?.id || null,
-      comparison_operator: form.comparison_operator.value,
-      order_operator: form.order_operator.value,
-      task_status: form.task_status.value,
+      comparison_operator: form.comparison_operator?.value || '',
+      order_operator: form.order_operator?.value || '',
+      task_status: form.task_status.value || '',
       task_outcome: form.task_outcome?.id || null,
-      target_task: form.target_task.value,
+      target_task: form.target_task.value || '',
       days_worked: form.days_worked,
     };
     const control_elementId = form.control_element.id

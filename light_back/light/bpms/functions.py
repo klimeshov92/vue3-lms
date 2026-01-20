@@ -207,7 +207,9 @@ def check_control_element_conditions(control_element, interaction):
     for chunk_conditions in chunks.values():
         results = []
         for condition in chunk_conditions:
-            if condition.condition_type == 'task_status':
+            if condition.condition_type == 'task_exists':
+                result = check_task_exists_condition(condition, interaction)
+            elif condition.condition_type == 'task_status':
                 result = check_task_status_condition(condition, interaction)
             elif condition.condition_type == 'task_outcome':
                 result = check_task_outcome_condition(condition, interaction)
@@ -261,6 +263,18 @@ def get_task_result(task):
         'test_taking': 'test_result',
     }
     return getattr(task, task_type_to_result.get(task.task_type, ''), None)
+
+def check_task_exists_condition(condition, interaction):
+    task = get_target_task(
+        condition.target_task,
+        condition.task_template,
+        interaction
+    )
+    task_exists = task is not None
+    logger.debug(
+        f"Проверка наличия задачи: по условию={condition.boolean_operator}, по факту {task_exists}"
+    )
+    return task_exists == condition.boolean_operator
 
 def check_task_status_condition(condition, interaction):
     task = get_target_task(condition.target_task, condition.task_template, interaction)

@@ -22,6 +22,10 @@ class TaskTemplateFilter(filters.FilterSet):
         queryset=Category.objects.all(),
         to_field_name='id'
     )
+    task_type = filters.MultipleChoiceFilter(
+        field_name='task_type',
+        choices=TaskTemplate.TASK_TYPES
+    )
 
     class Meta:
         model = TaskTemplate
@@ -37,6 +41,30 @@ class TaskFilter(filters.FilterSet):
 
     class Meta:
         model = Task
+        fields = ['name', 'categories']
+
+class PublicTaskFilter(filters.FilterSet):
+    name = filters.CharFilter(field_name='name', lookup_expr='icontains')
+    categories = filters.ModelMultipleChoiceFilter(
+        field_name='categories',
+        queryset=Category.objects.all(),
+        to_field_name='id'
+    )
+
+    class Meta:
+        model = PublicTask
+        fields = ['name', 'categories']
+
+class PublicPlanFilter(filters.FilterSet):
+    name = filters.CharFilter(field_name='name', lookup_expr='icontains')
+    categories = filters.ModelMultipleChoiceFilter(
+        field_name='categories',
+        queryset=Category.objects.all(),
+        to_field_name='id'
+    )
+
+    class Meta:
+        model = PublicPlan
         fields = ['name', 'categories']
 
 class TaskTemplateAssignmentFilter(filters.FilterSet):

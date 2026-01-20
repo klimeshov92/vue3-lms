@@ -11,6 +11,8 @@ router = DefaultRouter()
 
 router.register(r'interactions', InteractionViewSet)
 router.register(r'task_templates', TaskTemplateViewSet)
+router.register(r'public_tasks', PublicTaskViewSet)
+router.register(r'public_plans', PublicPlanViewSet)
 router.register(r'tasks', TaskViewSet)
 router.register(r'task_template_assignments', TaskTemplateAssignmentViewSet)
 router.register(r'queues', QueueViewSet)
@@ -28,6 +30,8 @@ urlpatterns = [
    path('task_result_update/<int:task_id>/', task_result_update, name='task_result_update'),
    path('plan_result_update/<int:task_id>/', plan_result_update, name='plan_result_update'),
    path('self_assignment/<int:task_template_id>/', self_assignment, name='self_assignment'),
+   path('self_assignment/<int:task_template_id>/public_plan/<int:public_id>/', self_assignment, name='self_assignment_public_plan'),
+   path('self_assignment/<int:task_template_id>/public_task/<int:public_id>/', self_assignment, name='self_assignment_public_task'),
    path('plan_result_update/<int:task_id>/', plan_result_update, name='plan_result_update'),
    path('analytics_task_template/', analytics_task_template, name='analytics_task_template'),
 ]

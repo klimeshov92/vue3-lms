@@ -162,6 +162,102 @@ class TaskTemplateEditSerializer(serializers.ModelSerializer):
         validated_data['editor'] = self.context['request'].user
         return super().update(instance, validated_data)
 
+class PublicTaskSerializer(serializers.ModelSerializer):
+    task_template = TaskTemplateBaseSerializer(required=False)
+    categories = CategoryBaseSerializer(many=True, required=False)
+    str = serializers.SerializerMethodField()
+    accounts_group_object_permissions = serializers.SerializerMethodField()
+    account_object_permissions = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = PublicTask
+        fields = '__all__'
+
+    def get_str(self, obj):
+        return f'{obj.name}'
+
+    def get_accounts_group_object_permissions(self, obj):
+        content_type = ContentType.objects.get_for_model(obj.__class__)
+        permissions = AccountsGroupObjectPermission.objects.filter(
+            content_type=content_type,
+            object_pk=obj.pk
+        )
+        return AccountsGroupObjectPermissionBaseSerializer(permissions, many=True, context=self.context).data
+
+    def get_account_object_permissions(self, obj):
+        content_type = ContentType.objects.get_for_model(obj.__class__)
+        permissions = AccountObjectPermission.objects.filter(
+            content_type=content_type,
+            object_pk=obj.pk
+        )
+        return AccountObjectPermissionBaseSerializer(permissions, many=True, context=self.context).data
+
+class PublicTaskEditSerializer(serializers.ModelSerializer):
+    task_template = serializers.PrimaryKeyRelatedField(queryset=TaskTemplate.objects.all(), required=False, allow_null=True)
+    categories = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), many=True, required=False)
+
+    class Meta:
+        model = PublicTask
+        fields = '__all__'
+
+    def create(self, validated_data):
+        validated_data['creator'] = self.context['request'].user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data['editor'] = self.context['request'].user
+        return super().update(instance, validated_data)
+
+class PublicPlanSerializer(serializers.ModelSerializer):
+    task_template = TaskTemplateBaseSerializer(required=False)
+    categories = CategoryBaseSerializer(many=True, required=False)
+    str = serializers.SerializerMethodField()
+    accounts_group_object_permissions = serializers.SerializerMethodField()
+    account_object_permissions = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = PublicPlan
+        fields = '__all__'
+
+    def get_str(self, obj):
+        return f'{obj.name}'
+
+    def get_accounts_group_object_permissions(self, obj):
+        content_type = ContentType.objects.get_for_model(obj.__class__)
+        permissions = AccountsGroupObjectPermission.objects.filter(
+            content_type=content_type,
+            object_pk=obj.pk
+        )
+        return AccountsGroupObjectPermissionBaseSerializer(permissions, many=True, context=self.context).data
+
+    def get_account_object_permissions(self, obj):
+        content_type = ContentType.objects.get_for_model(obj.__class__)
+        permissions = AccountObjectPermission.objects.filter(
+            content_type=content_type,
+            object_pk=obj.pk
+        )
+        return AccountObjectPermissionBaseSerializer(permissions, many=True, context=self.context).data
+
+class PublicPlanEditSerializer(serializers.ModelSerializer):
+    task_template = serializers.PrimaryKeyRelatedField(queryset=TaskTemplate.objects.all(), required=False, allow_null=True)
+    categories = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), many=True, required=False)
+
+    class Meta:
+        model = PublicPlan
+        fields = '__all__'
+
+    def create(self, validated_data):
+        validated_data['creator'] = self.context['request'].user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data['editor'] = self.context['request'].user
+        return super().update(instance, validated_data)
+
 class TaskBaseSerializer(serializers.ModelSerializer):
     str = serializers.SerializerMethodField()
     creator = serializers.StringRelatedField()
@@ -696,7 +792,11 @@ class ControlElementConditionSerializer(serializers.ModelSerializer):
         return obj.get_target_task_display()
 
     def get_str(self, obj):
-        if obj.condition_type == 'task_status':
+        if obj.condition_type == 'task_not_exists':
+            return f'{obj.control_element} - {obj.get_condition_type_display()} - {obj.task_template.name}'
+        elif obj.condition_type == 'child_tasks_status':
+            return f'{obj.control_element} - {obj.get_condition_type_display()} - {obj.task_template.name} - {obj.get_comparison_operator_display()} - {obj.get_task_status_display()}'
+        elif obj.condition_type == 'task_status':
             return f'{obj.control_element} - {obj.get_condition_type_display()} - {obj.task_template.name} - {obj.get_comparison_operator_display()} - {obj.get_task_status_display()}'
         elif obj.condition_type == 'task_outcome':
             return f'{obj.control_element} - {obj.get_condition_type_display()} - {obj.task_template.name} - {obj.get_comparison_operator_display()} - {obj.task_outcome}'

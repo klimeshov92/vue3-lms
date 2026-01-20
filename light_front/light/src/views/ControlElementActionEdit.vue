@@ -91,10 +91,10 @@
         </div>
 
         <div v-if="form.action_type?.value == 'change_task_status' || form.action_type?.value == 'change_task_outcome'  || form.action_type?.value == 'add_task_to_queue'" class="form-field">
-          <label class="form-label">Целевая задача:</label>
+          <label class="form-label">Целевое взаимодействие:</label>
           <multiselect
-            v-model="form.target_task"
-            :options="target_tasks"
+            v-model="form.task_interaction"
+            :options="task_interactions"
             :searchable="false"
             :multiple="false"
             :close-on-select="true"
@@ -107,7 +107,7 @@
             :deselect-label="``"
             :selected-label="``"
           />
-          <span v-if="errors.target_task" class="error">{{ errors.target_task }}</span>
+          <span v-if="errors.task_interaction" class="error">{{ errors.task_interaction }}</span>
         </div>
 
         <div v-if="form.action_type?.value == 'change_task_status'" class="form-field">
@@ -160,8 +160,8 @@
         <div v-if="form.action_type?.value == 'assign_task'" class="form-field">
           <label class="form-label">Целевое взаимодействие:</label>
           <multiselect
-            v-model="form.target_interaction"
-            :options="target_interactions"
+            v-model="form.assign_interaction"
+            :options="assign_interactions"
             :searchable="false"
             :multiple="false"
             :close-on-select="true"
@@ -174,7 +174,7 @@
             :deselect-label="``"
             :selected-label="``"
           />
-          <span v-if="errors.target_interaction" class="error">{{ errors.target_interaction }}</span>
+          <span v-if="errors.assign_interaction" class="error">{{ errors.assign_interaction }}</span>
         </div>
 
         <div v-if="form.action_type?.value == 'assign_task'" class="form-field">
@@ -411,12 +411,12 @@ const task_statuses = [
   { label: 'Отменена', value: 'canceled' },
 ];
 
-const target_tasks = [
-  { label: 'Последняя задача в рамках текущего взаимодействия', value: 'current' },
-  { label: 'Последняя задача в рамках всех взаимодействий', value: 'all' },
+const task_interactions = [
+  { label: 'В рамках текущего взаимодействия', value: 'current' },
+  { label: 'В рамках всех взаимодействий', value: 'all' },
 ];
 
-const target_interactions = [
+const assign_interactions = [
   { label: 'Текущее', value: 'current' },
   { label: 'Последнее', value: 'last' },
 ];
@@ -442,9 +442,9 @@ const form = reactive({
   task_template: null,
   task_status: '',
   task_outcome: null,
-  target_task: '',
+  task_interaction: '',
   target_group: null,
-  target_interaction: '',
+  assign_interaction: '',
   executor_type: '',
   executor: null,
   manager_control: false,
@@ -594,8 +594,8 @@ const fetchObject = async () => {
     object.value = response.data;
     object.value.action_type = action_types.find(option => option.value === object.value.action_type);
     object.value.task_status = task_statuses.find(option => option.value === object.value.task_status);
-    object.value.target_task = target_tasks.find(option => option.value === object.value.target_task);
-    object.value.target_interaction = target_interactions.find(option => option.value === object.value.target_interaction);
+    object.value.task_interaction = task_interactions.find(option => option.value === object.value.task_interaction);
+    object.value.assign_interaction = assign_interactions.find(option => option.value === object.value.assign_interaction);
     object.value.executor_type = executor_types.find(option => option.value === object.value.executor_type);
     object.value.delay_type = delay_types.find(option => option.value === object.value.delay_type);
     console.log(`Объект нормализован:`, object.value);
@@ -610,7 +610,7 @@ watch(
   () => form.action_type,
   (newValue, oldValue) => {
     if (newValue.value != 'change_task_status' && newValue.value != 'change_task_outcome' && newValue.value != 'add_task_to_queue') {
-      form.target_task = '';
+      form.task_interaction = '';
     }
     if (newValue.value != 'change_task_status') {
       form.task_status = '';
@@ -622,7 +622,7 @@ watch(
       form.task_template = null;
     }
     if (newValue.value != 'assign_task') {
-      form.target_interaction = '';
+      form.assign_interaction = '';
       form.executor_type = '';
       form.executor = null;
       form.controller_group = null;
@@ -663,17 +663,17 @@ const validateForm = () => {
   errors.item = form.item && form.item > 0 ? '' : 'Пункт обязателен и должен быть больше 0!';
   if (form.condition_type == 'change_task_status') {
     errors.task_template = form.task_template ? '' : 'Шаблон задачи обязателен!';
-    errors.target_task = form.target_task ? '' : 'Целевая задача обязательна!';
+    errors.task_interaction = form.task_interaction ? '' : 'Целевое взаимодействие обязательна!';
     errors.task_status = form.task_status.value ? '' : 'Статус задачи обязателен!';
   }
   if (form.condition_type == 'change_task_outcome') {
     errors.task_template = form.task_template ? '' : 'Шаблон задачи обязателен!';
-    errors.target_task = form.target_task ? '' : 'Целевая задача обязательна!';
+    errors.task_interaction = form.task_interaction ? '' : 'Целевое взаимодействие обязательна!';
     errors.task_outcome = form.task_outcome ? '' : 'Итог задачи обязателен!';
   }
   if (form.condition_type == 'assign_task') {
     errors.task_template = form.task_template ? '' : 'Шаблон задачи обязателен!';
-    errors.target_interaction = form.target_interaction ? '' : 'Целевое взаимодействие обязательно!';
+    errors.assign_interaction = form.assign_interaction ? '' : 'Целевое взаимодействие обязательно!';
     errors.executor_type = form.executor_type ? '' : 'Тип исполнителя обязателен!';
     if (form.executor_type?.value == 'selected_executor') {
       errors.executor = form.executor ? '' : 'Выбор исполнителя обязателен!';
@@ -685,7 +685,7 @@ const validateForm = () => {
   }
   if (form.condition_type == 'add_task_to_queue') {
     errors.task_template = form.task_template ? '' : 'Шаблон задачи обязателен!';
-    errors.target_task = form.target_task ? '' : 'Целевая задача обязательна!';
+    errors.task_interaction = form.task_interaction ? '' : 'Целевое взаимодействие обязательна!';
     errors.queue = form.queue ? '' : 'Очередь обязательна!';
   }
   if (form.condition_type == 'add_to_group' || form.condition_type == 'remove_from_group') {
@@ -716,17 +716,17 @@ const saveChanges = async () => {
       item: form.item,
       action_type: form.action_type.value,
       task_template: form.task_template?.id || null,
-      task_status: form.task_status.value,
+      task_status: form.task_status?.value || '',
       task_outcome: form.task_outcome?.id || null,
-      target_interaction: form.target_interaction.value,
-      target_task: form.target_task.value,
+      assign_interaction: form.assign_interaction?.value || '',
+      task_interaction: form.task_interaction?.value || '',
       target_group: form.target_group?.id || null,
-      executor_type: form.executor_type.value,
+      executor_type: form.executor_type?.value || '',
       executor: form.executor?.id || null,
       manager_control: form.manager_control,
       controller_group: form.controller_group?.id || null,
       observer_group: form.observer_group?.id || null,
-      delay_type: form.delay_type.value,
+      delay_type: form.delay_type?.value || '',
       delay_value: form.delay_value,
       queue: form.queue?.id || null,
     };

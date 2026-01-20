@@ -144,6 +144,28 @@
         Контент
       </div>
 
+      <router-link :to="{ name: 'PublicPlanList' }" 
+        @click="toggleMenu" 
+        class="header-menu_link"
+        v-if="state.canViewPublicPlan">
+        <div class="header-menu_link-items-inner">
+          <div>
+            Планы
+          </div>
+        </div>
+      </router-link>
+
+      <router-link :to="{ name: 'PublicTaskList' }" 
+        @click="toggleMenu" 
+        class="header-menu_link"
+        v-if="state.canViewPublicTask">
+        <div class="header-menu_link-items-inner">
+          <div>
+            Задания
+          </div>
+        </div>
+      </router-link>
+
       <router-link :to="{ name: 'FileList' }" 
         @click="toggleMenu" 
         class="header-menu_link"
@@ -507,6 +529,8 @@ const state = reactive({
   canViewControlElement: false,
   canViewTaskAnalytics: false,
   canViewPlaning: false,
+  canViewPublicTask: false,
+  canViewPublicPlan: false,
   canViewFile: false,
   canViewNew: false,
   canViewMaterial: false,
@@ -618,7 +642,16 @@ const loadUserPermissions = async () => {
       state.canViewTaskAnalytics
     )
     console.log('Права на просмотр планирования:', state.canViewPlaning);
+    
+    state.canViewPublicPlan = state.globalPermissionsList.includes('bpms.view_public_plan') ||
+      (state.objectPermissionsDict['bpms.view_public_plan'] &&
+      state.objectPermissionsDict['bpms.view_public_plan'].includes(Number(id)));
+    console.log('Права на просмотр планов:', state.canViewPublicPlan)
 
+    state.canViewPublicTask = state.globalPermissionsList.includes('bpms.view_public_task') ||
+      (state.objectPermissionsDict['bpms.view_public_task'] &&
+      state.objectPermissionsDict['bpms.view_public_task'].includes(Number(id)));
+    console.log('Права на просмотр заданий:', state.canViewPublicTask);
 
     state.canViewFile = state.globalPermissionsList.includes('files.view_file') ||
       (state.objectPermissionsDict['files.view_file'] &&
@@ -661,6 +694,8 @@ const loadUserPermissions = async () => {
     console.log('Права на просмотр аккаунтов:', state.canViewEventSlot);
 
     state.canViewContent = (
+      state.canViewPublicPlan || 
+      state.canViewPublicTask || 
       state.canViewNew || 
       state.canViewMaterial ||
       state.canViewCourse ||

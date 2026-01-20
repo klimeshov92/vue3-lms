@@ -111,6 +111,90 @@ class TaskTemplateViewSet(viewsets.ModelViewSet):
         logger.debug(f"Удаляем через ViewSet, Метод HTTP: {self.request.method}, Заголовки: {self.request.headers}")
         instance.delete()
 
+class PublicTaskViewSet(viewsets.ModelViewSet):
+    queryset = PublicTask.objects.all()
+    permission_classes = [AllowAny, ObjectPermission]
+    pagination_class = CustomPageNumberPagination
+    filterset_class = PublicTaskFilter
+    ordering_fields = ['name']
+    ordering = ['name']
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return PublicTaskEditSerializer
+        elif self.action == 'partial_update':
+            return PublicTaskEditSerializer
+        return PublicTaskSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query_params = self.request.query_params.copy()
+        if 'categories[]' in query_params:
+            query_params.setlist('categories', query_params.getlist('categories[]'))
+            query_params.pop('categories[]', None)
+        self.request._request.GET = query_params
+        logger.debug(f"Метод HTTP: {self.request.method}, Заголовки: {self.request.headers}, Параметры запроса: {self.request.query_params}")
+        return queryset
+
+    def get_object(self):
+        obj = super().get_object()
+        logger.debug(f"Метод HTTP: {self.request.method}, Заголовки: {self.request.headers}, Объект ID: {obj.pk}")
+        return obj
+
+    def perform_create(self, serializer):
+        logger.debug(f"Создаем через ViewSet, Метод HTTP: {self.request.method}, Заголовки: {self.request.headers}, Данные: {self.request.data}")
+        object = serializer.save()
+
+    def perform_update(self, serializer):
+        logger.debug(f"Обновляем через ViewSet, Метод HTTP: {self.request.method}, Заголовки: {self.request.headers}, Данные: {self.request.data}")
+        object = serializer.save()
+
+    def perform_destroy(self, instance):
+        logger.debug(f"Удаляем через ViewSet, Метод HTTP: {self.request.method}, Заголовки: {self.request.headers}")
+        instance.delete()
+
+class PublicPlanViewSet(viewsets.ModelViewSet):
+    queryset = PublicPlan.objects.all()
+    permission_classes = [AllowAny, ObjectPermission]
+    pagination_class = CustomPageNumberPagination
+    filterset_class = PublicPlanFilter
+    ordering_fields = ['name']
+    ordering = ['name']
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return PublicPlanEditSerializer
+        elif self.action == 'partial_update':
+            return PublicPlanEditSerializer
+        return PublicPlanSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query_params = self.request.query_params.copy()
+        if 'categories[]' in query_params:
+            query_params.setlist('categories', query_params.getlist('categories[]'))
+            query_params.pop('categories[]', None)
+        self.request._request.GET = query_params
+        logger.debug(f"Метод HTTP: {self.request.method}, Заголовки: {self.request.headers}, Параметры запроса: {self.request.query_params}")
+        return queryset
+
+    def get_object(self):
+        obj = super().get_object()
+        logger.debug(f"Метод HTTP: {self.request.method}, Заголовки: {self.request.headers}, Объект ID: {obj.pk}")
+        return obj
+
+    def perform_create(self, serializer):
+        logger.debug(f"Создаем через ViewSet, Метод HTTP: {self.request.method}, Заголовки: {self.request.headers}, Данные: {self.request.data}")
+        object = serializer.save()
+
+    def perform_update(self, serializer):
+        logger.debug(f"Обновляем через ViewSet, Метод HTTP: {self.request.method}, Заголовки: {self.request.headers}, Данные: {self.request.data}")
+        object = serializer.save()
+
+    def perform_destroy(self, instance):
+        logger.debug(f"Удаляем через ViewSet, Метод HTTP: {self.request.method}, Заголовки: {self.request.headers}")
+        instance.delete()
+
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     permission_classes = [AllowAny, ObjectPermission]
@@ -652,14 +736,29 @@ def plan_result_update(request, task_id):
         return Response({"error": "Ошибка сервера", "details": str(e)}, status=500)
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
-def self_assignment(request, task_template_id):
+@permission_classes([IsAuthenticated])
+def self_assignment(request, task_template_id, public_id=None):
     try:
 
         task_template = get_object_or_404(TaskTemplate, pk=task_template_id)
         task_type = task_template.task_type
-
         user = request.user
+        has_permission = False
+
+        if task_type == 'common_task':
+            public_task = get_object_or_404(PublicTask, pk=public_id, task_template=task_template)
+            permission_codename = 'bpms.view_public_task'
+            has_permission = (
+                    user.has_perm(permission_codename) or
+                    user.has_perm(permission_codename, public_task)
+            )
+        if task_type == 'plan_implementation':
+            public_plan = get_object_or_404(PublicPlan, pk=public_id, task_template=task_template)
+            permission_codename = 'bpms.view_public_plan'
+            has_permission = (
+                    user.has_perm(permission_codename) or
+                    user.has_perm(permission_codename, public_plan)
+            )
         if task_type == 'news_reading':
             permission_codename = 'news.view_new'
             has_permission = (

@@ -59,6 +59,9 @@
               >
                 Удалить
               </button>
+
+              <button type="button" @click="back" class="button">Назад</button>
+
             </div>
             <div v-if="showAccountDeleteModal" class="modal-overlay">
               <div class="modal">
@@ -570,6 +573,10 @@ const loadUserPermissions = async () => {
   } catch (error) {
     console.error('Ошибка при загрузке разрешений пользователя:', error);
   }
+};
+
+const back = () => {
+  router.back();
 };
 
 const tabs = computed(() => [

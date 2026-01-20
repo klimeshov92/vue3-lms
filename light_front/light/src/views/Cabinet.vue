@@ -326,6 +326,10 @@ const loadUserPermissions = async () => {
   }
 };
 
+const back = () => {
+  router.back();
+};
+
 const tabs = computed(() => [
   { name: 'details', label: 'Детали' },
   { name: 'placements', label: 'Должности' },

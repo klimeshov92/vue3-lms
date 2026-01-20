@@ -40,6 +40,8 @@
               >
                 Удалить
               </button>
+
+              <button type="button" @click="back" class="button">Назад</button>
             </div>
             <div v-if="showControlElementDeleteModal" class="modal-overlay">
               <div class="modal">
@@ -230,6 +232,22 @@
                         <h2>
                           {{ control_element_condition.item ? control_element_condition.item : 'Нет данных' }} - {{ control_element_condition.condition_type_display ? control_element_condition.condition_type_display : 'Нет данных' }}
                         </h2>
+                      </div>
+
+                    </div>
+
+                    <div v-if="control_element_condition.condition_type == 'task_exists'" class="chips-tab-item-detail">
+
+                      <div class="chips-tab-item-detail-elem">
+                        <span class="chips-tab-item-detail-label">Шаблон задачи:</span> {{ control_element_condition.task_template ? control_element_condition.task_template.str : 'Нет данных' }}
+                      </div>
+
+                      <div class="chips-tab-item-detail-elem">
+                        <span class="chips-tab-item-detail-label">Целевая задача:</span> {{ control_element_condition.target_task_display ? control_element_condition.target_task_display : 'Нет данных' }}
+                      </div>
+
+                      <div class="chips-tab-item-detail-elem">
+                        <span class="chips-tab-item-detail-label">Оператор сравнения:</span> {{ control_element_condition.boolean_operator ? 'Да' : 'Нет' }}
                       </div>
 
                     </div>
@@ -806,6 +824,10 @@ const loadUserPermissions = async () => {
   } catch (error) {
     console.error('Ошибка при загрузке разрешений пользователя:', error);
   }
+};
+
+const back = () => {
+  router.back();
 };
 
 const tabs = computed(() => [

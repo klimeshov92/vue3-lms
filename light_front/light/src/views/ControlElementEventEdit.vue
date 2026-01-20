@@ -348,7 +348,7 @@ const saveChanges = async () => {
       event_type: form.event_type.value,
       task_template: form.task_template?.id || null,
       fired_trigger: form.fired_trigger?.id || null,
-      period: form.period.value,
+      period: form.period?.value || '',
       start_time: form.start_time,
     };
     const control_elementId = form.control_element.id

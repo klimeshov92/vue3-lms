@@ -235,6 +235,114 @@ class TaskTemplate(models.Model):
         else:
             return f'{self.get_task_type_display()} - {self.name}'
 
+class PublicPlan(models.Model):
+    avatar = models.ImageField(verbose_name='Аватар', null=True, blank=True, upload_to='public_plan_avatars/')
+    task_template = models.ForeignKey(
+        TaskTemplate,
+        verbose_name='Шаблон задачи',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='task_template_public_plans',
+        related_query_name='task_template_public_plan'
+    )
+    name = models.CharField(verbose_name='Название', max_length=255, db_index=True)
+    desc = models.TextField(verbose_name='Описание', null=True, blank=True)
+    categories = models.ManyToManyField(
+        Category,
+        verbose_name='Категории',
+        blank=True,
+        related_name='public_plans',
+        related_query_name='public_plan'
+    )
+    created = models.DateTimeField(auto_now_add=True, verbose_name='Дата и время создания', db_index=True)
+    changed = models.DateTimeField(auto_now=True, verbose_name='Дата и время изменения', db_index=True)
+    creator = models.ForeignKey(
+        Account,
+        verbose_name='Создал',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='public_plan_creators',
+        related_query_name='public_plan_creator'
+    )
+    editor = models.ForeignKey(
+        Account,
+        verbose_name='Изменил',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='public_plan_editors',
+        related_query_name='public_plan_editor'
+    )
+
+    class Meta:
+        verbose_name = 'Задание'
+        verbose_name_plural = 'Задание'
+        default_permissions = ()
+        permissions = (
+            ('add_public_plan', 'Может добавить план'),
+            ('change_public_plan', 'Может изменить план'),
+            ('delete_public_plan', 'Может удалить план'),
+            ('view_public_plan', 'Может просматривать план'),
+        )
+    def __str__(self):
+        return f'{self.name}'
+
+class PublicTask(models.Model):
+    avatar = models.ImageField(verbose_name='Аватар', null=True, blank=True, upload_to='public_task_avatars/')
+    task_template = models.ForeignKey(
+        TaskTemplate,
+        verbose_name='Шаблон задачи',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='task_template_public_tasks',
+        related_query_name='task_template_public_task'
+    )
+    name = models.CharField(verbose_name='Название', max_length=255, db_index=True)
+    desc = models.TextField(verbose_name='Описание', null=True, blank=True)
+    categories = models.ManyToManyField(
+        Category,
+        verbose_name='Категории',
+        blank=True,
+        related_name='public_tasks',
+        related_query_name='public_task'
+    )
+    created = models.DateTimeField(auto_now_add=True, verbose_name='Дата и время создания', db_index=True)
+    changed = models.DateTimeField(auto_now=True, verbose_name='Дата и время изменения', db_index=True)
+    creator = models.ForeignKey(
+        Account,
+        verbose_name='Создал',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='public_task_creators',
+        related_query_name='public_task_creator'
+    )
+    editor = models.ForeignKey(
+        Account,
+        verbose_name='Изменил',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='public_task_editors',
+        related_query_name='public_task_editor'
+    )
+
+    class Meta:
+        verbose_name = 'Задание'
+        verbose_name_plural = 'Задание'
+        default_permissions = ()
+        permissions = (
+            ('add_public_task', 'Может добавить задание'),
+            ('change_public_task', 'Может изменить задание'),
+            ('delete_public_task', 'Может удалить задание'),
+            ('view_public_task', 'Может просматривать задание'),
+        )
+    def __str__(self):
+        return f'{self.name}'
+
 class Task(models.Model):
     # Шаблон
     task_template = models.ForeignKey(
@@ -1615,6 +1723,7 @@ class ControlElementCondition(models.Model):
     ]
     logic_operator = models.CharField('Логический оператор', max_length=50, null=True, blank=True, choices=LOGIC_OPERATORS)
     CONDITION_TYPES = [
+        ('task_exists', 'Задача назначалась'),
         ('child_tasks_status', 'Статус дочерних задач'),
         ('task_status', 'Статус задачи'),
         ('task_outcome', 'Итог задачи'),
@@ -1630,6 +1739,7 @@ class ControlElementCondition(models.Model):
         blank=True,
         on_delete=models.SET_NULL
     )
+    boolean_operator = models.BooleanField('Оператор сравнения', default=False)
     COMPARISON_OPERATORS = [
         ('equal', 'Равно'),
         ('not_equal', 'Не равно'),
@@ -1637,7 +1747,7 @@ class ControlElementCondition(models.Model):
     comparison_operator = models.CharField('Оператор сравнения', max_length=50, choices=COMPARISON_OPERATORS, null=True, blank=True)
     ORDER_OPERATORS = [
         ('gte', 'Больше или равно'),
-        ('lte', 'Меньше или равн'),
+        ('lte', 'Меньше или равно'),
     ]
     order_operator = models.CharField('Оператор сравнения', max_length=50, choices=ORDER_OPERATORS, null=True, blank=True)
     TASK_STATUSES = [
@@ -1660,8 +1770,8 @@ class ControlElementCondition(models.Model):
         on_delete=models.SET_NULL
     )
     TARGET_TASKS = [
-        ('current', 'Последняя задача в рамках текущего взаимодействия'),
-        ('all', 'Последняя задача в рамках всех взаимодействий'),
+        ('current', 'В рамках текущего взаимодействия'),
+        ('all', 'В рамках всех взаимодействий'),
     ]
     target_task = models.CharField('Целевая задача', max_length=50, choices=TARGET_TASKS, null=True, blank=True)
     days_worked = models.PositiveIntegerField(
@@ -1702,7 +1812,9 @@ class ControlElementCondition(models.Model):
         )
 
     def __str__(self):
-        if self.condition_type == 'child_tasks_status':
+        if self.condition_type == 'task_not_exists':
+            return f'{self.control_element} - {self.get_condition_type_display()} - {self.task_template.name}'
+        elif self.condition_type == 'child_tasks_status':
             return f'{self.control_element} - {self.get_condition_type_display()} - {self.task_template.name} - {self.get_comparison_operator_display()} - {self.get_task_status_display()}'
         elif self.condition_type == 'task_status':
             return f'{self.control_element} - {self.get_condition_type_display()} - {self.task_template.name} - {self.get_comparison_operator_display()} - {self.get_task_status_display()}'
@@ -1751,8 +1863,8 @@ class ControlElementAction(models.Model):
         on_delete=models.SET_NULL
     )
     TARGET_TASKS = [
-        ('current', 'Последняя задача в рамках текущего взаимодействия'),
-        ('all', 'Последняя задача в рамках всех взаимодействий'),
+        ('current', 'В рамках текущего взаимодействия'),
+        ('all', 'В рамках всех взаимодействий'),
     ]
     target_task = models.CharField('Целевая задача', max_length=50, choices=TARGET_TASKS, null=True, blank=True)
     target_group = models.ForeignKey(
