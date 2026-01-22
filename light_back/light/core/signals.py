@@ -11,6 +11,8 @@ from django.http import HttpResponseServerError
 # Импортируем пользовательские модели из текущего приложения.
 # Эти модели используются для создания связанных объектов в базе данных.
 from .models import Organization, Subdivision, Position, Account, Placement, AccountsGroup, GroupGenerator, AccountObjectPermission, AccountsGroupObjectPermission
+from bpms.models import Interaction, ControlElementEvent
+from bpms.functions import process_events
 # Импортируем функцию make_password из модуля auth.hashers. Используется для хеширования паролей.
 from django.contrib.auth.hashers import make_password
 # Импортируем функцию get_random_string из модуля utils.crypto.
@@ -152,13 +154,26 @@ def employees_post_save(sender, instance, created, **kwargs):
 
         # Действия для только что созданных сотрудников.
         if created:
+            notification_settings, _ = NotificationSettings.objects.get_or_create(account=instance)
+            logger.debug(f"Созданы настройки оповещений {notification_settings} для пользователя {instance}")
+
+            first_interaction = Interaction.objects.create(
+                object_type='account',
+                account=instance,
+            )
+            logger.debug(f"Создано первое взаимодействие {first_interaction} для пользователя {instance}")
+
+            events = ControlElementEvent.objects.filter(
+                event_type='account_created',
+            ).select_related('control_element')
+
+            process_events(events, first_interaction)
+
             if not instance.self_registration:
                 # Установка случайного пароля для новых сотрудников.
                 random_password = get_random_string(length=8)
                 instance.set_password(random_password)
                 instance.save()
-
-            notification_settings, _ = NotificationSettings.objects.get_or_create(account=instance)
 
     # Логирование исключений, если они возникнут.
     except Exception as e:
@@ -210,7 +225,7 @@ def placement_post_delete(sender, instance, **kwargs):
 
         # Получение всех активных назначений пользователя.
         active_placements = Placement.objects.filter(
-            employee=instance.employee,
+            account=instance.account,
             end_date__isnull=True
         ).exclude(id=instance.id)
 
@@ -218,13 +233,13 @@ def placement_post_delete(sender, instance, **kwargs):
         for group in [instance.position.group, instance.position.subdivision.group, instance.position.subdivision.organization.group]:
 
             # Проверка, существует ли группа и состоит ли в ней пользователь.
-            if group and group.user_set.filter(pk=instance.employee.pk).exists():
+            if group and group.user_set.filter(pk=instance.account.pk).exists():
 
                 # Далее нужно проверить, есть ли другие активные назначения у сотрудника в этой группе.
                 if not active_placements.filter(position__group=group).exists() \
                         and not active_placements.filter(position__subdivision__group=group).exists() \
                         and not active_placements.filter(position__subdivision__organization__group=group).exists():
-                    group.user_set.remove(instance.employee)
+                    group.user_set.remove(instance.account)
 
     # Логирование исключений, если они возникнут.
     except Exception as e:

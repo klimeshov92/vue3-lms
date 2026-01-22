@@ -218,6 +218,111 @@ def user_permissions(request):
         logger.error(f"Ошибка при проверке разрешений: {e}")
         return Response({'error': 'Ошибка при проверке разрешений', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def users_permissions(request):
+    try:
+
+        user = request.user
+        if user.has_perm('auth.view_permission'):
+            logger.debug(f"Пользователь '{user}' имеет глобальное разрешение '{'auth.view_permission'}'")
+        else:
+            logger.debug(f"Пользователь '{user}' НЕ имеет глобальное разрешение '{'auth.view_permission'}'")
+            return Response({"error": "Нет прав на просмотр прав"}, status=403)
+
+
+        account = request.query_params.get("account")
+        name = request.query_params.get("name")
+
+        users_qs = Account.objects.all()
+        if account:
+            account = get_object_or_404(Account, pk=account)
+            users_qs = users_qs.filter(pk=account.id)
+
+        data = []
+
+        for user in users_qs:
+
+            # Глобальные прямые права
+            if user.is_superuser:
+                direct_perms = Permission.objects.all()
+            else:
+                direct_perms = Permission.objects.filter(user=user)
+
+            group_perms = Permission.objects.filter(group__user=user)
+            direct_object_perms = AccountObjectPermission.objects.filter(user=user)
+            group_object_perms = AccountsGroupObjectPermission.objects.filter(group__user=user)
+
+            if name:
+                direct_perms = direct_perms.filter(name__icontains=name)
+                group_perms = group_perms.filter(name__icontains=name)
+                direct_object_perms = direct_object_perms.filter(permission__name__icontains=name)
+                group_object_perms = group_object_perms.filter(permission__name__icontains=name)
+
+            # формируем единый список прав
+            for p in direct_perms:
+                data.append({
+                    "user": {"id": user.id, "username": user.username, "is_superuser": user.is_superuser},
+                    "type": "direct",
+                    "permission": {"id": p.id, "name": p.name},
+                    "group": None,
+                    "object_perm_id": None,
+                    "object": None,
+                    "content_type": None,
+                })
+
+            for p in group_perms:
+                for g in p.group_set.all():
+                    if user in g.user_set.all():
+                        data.append({
+                            "user": {"id": user.id, "username": user.username, "is_superuser": user.is_superuser},
+                            "type": "group",
+                            "permission": {"id": p.id, "name": p.name},
+                            "group": {"id": g.id, "name": g.name},
+                            "object_perm_id": None,
+                            "object": None,
+                            "content_type": None,
+                        })
+
+            for p in direct_object_perms:
+                obj_instance = p.permission.content_type.model_class().objects.get(pk=p.object_pk)
+                data.append({
+                    "user": {"id": user.id, "username": user.username, "is_superuser": user.is_superuser},
+                    "type": "object_direct",
+                    "permission": {"id": p.permission.id, "name": p.permission.name},
+                    "group": None,
+                    "object_perm_id": p.id,
+                    "object": {"id": obj_instance.pk, "str": str(obj_instance)},
+                    "content_type": {
+                        "id": p.permission.content_type.id,
+                        "verbose_name": p.permission.content_type.model_class()._meta.verbose_name
+                    },
+                })
+
+            for p in group_object_perms:
+                obj_instance = p.permission.content_type.model_class().objects.get(pk=p.object_pk)
+                data.append({
+                    "user": {"id": user.id, "username": user.username, "is_superuser": user.is_superuser},
+                    "type": "object_group",
+                    "permission": {"id": p.permission.id, "name": p.permission.name},
+                    "group": {"id": p.group.id, "name": p.group.name} if p.group else None,
+                    "object_perm_id": p.id,
+                    "object": {"id": obj_instance.pk, "str": str(obj_instance)},
+                    "content_type": {
+                        "id": p.permission.content_type.id,
+                        "verbose_name": p.permission.content_type.model_class()._meta.verbose_name
+                    },
+                })
+
+        paginator = CustomPageNumberPagination()
+        result_page = paginator.paginate_queryset(data, request)
+        return paginator.get_paginated_response(result_page)
+
+
+    except Exception as e:
+        logger.exception(f"Ошибка при получении прав пользователей")
+        return Response({"error": "Ошибка сервера", "details": str(e)}, status=500)
+
 class PermissionViewSet(viewsets.ModelViewSet):
     queryset = Permission.objects.all()
     permission_classes = [AllowAny, ObjectPermission]
@@ -647,111 +752,6 @@ class GroupGeneratorViewSet(viewsets.ModelViewSet):
             logger.debug(f"Удаляем через ViewSet, Метод HTTP: {self.request.method}, Заголовки: {self.request.headers}")
         instance.delete()
 
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def users_permissions(request):
-    try:
-
-        user = request.user
-        if user.has_perm('auth.view_permission'):
-            logger.debug(f"Пользователь '{user}' имеет глобальное разрешение '{'auth.view_permission'}'")
-        else:
-            logger.debug(f"Пользователь '{user}' НЕ имеет глобальное разрешение '{'auth.view_permission'}'")
-            return Response({"error": "Нет прав на просмотр прав"}, status=403)
-
-
-        account = request.query_params.get("account")
-        name = request.query_params.get("name")
-
-        users_qs = Account.objects.all()
-        if account:
-            account = get_object_or_404(Account, pk=account)
-            users_qs = users_qs.filter(pk=account.id)
-
-        data = []
-
-        for user in users_qs:
-
-            # Глобальные прямые права
-            if user.is_superuser:
-                direct_perms = Permission.objects.all()
-            else:
-                direct_perms = Permission.objects.filter(user=user)
-
-            group_perms = Permission.objects.filter(group__user=user)
-            direct_object_perms = AccountObjectPermission.objects.filter(user=user)
-            group_object_perms = AccountsGroupObjectPermission.objects.filter(group__user=user)
-
-            if name:
-                direct_perms = direct_perms.filter(name__icontains=name)
-                group_perms = group_perms.filter(name__icontains=name)
-                direct_object_perms = direct_object_perms.filter(permission__name__icontains=name)
-                group_object_perms = group_object_perms.filter(permission__name__icontains=name)
-
-            # формируем единый список прав
-            for p in direct_perms:
-                data.append({
-                    "user": {"id": user.id, "username": user.username, "is_superuser": user.is_superuser},
-                    "type": "direct",
-                    "permission": {"id": p.id, "name": p.name},
-                    "group": None,
-                    "object_perm_id": None,
-                    "object": None,
-                    "content_type": None,
-                })
-
-            for p in group_perms:
-                for g in p.group_set.all():
-                    if user in g.user_set.all():
-                        data.append({
-                            "user": {"id": user.id, "username": user.username, "is_superuser": user.is_superuser},
-                            "type": "group",
-                            "permission": {"id": p.id, "name": p.name},
-                            "group": {"id": g.id, "name": g.name},
-                            "object_perm_id": None,
-                            "object": None,
-                            "content_type": None,
-                        })
-
-            for p in direct_object_perms:
-                obj_instance = p.permission.content_type.model_class().objects.get(pk=p.object_pk)
-                data.append({
-                    "user": {"id": user.id, "username": user.username, "is_superuser": user.is_superuser},
-                    "type": "object_direct",
-                    "permission": {"id": p.permission.id, "name": p.permission.name},
-                    "group": None,
-                    "object_perm_id": p.id,
-                    "object": {"id": obj_instance.pk, "str": str(obj_instance)},
-                    "content_type": {
-                        "id": p.permission.content_type.id,
-                        "verbose_name": p.permission.content_type.model_class()._meta.verbose_name
-                    },
-                })
-
-            for p in group_object_perms:
-                obj_instance = p.permission.content_type.model_class().objects.get(pk=p.object_pk)
-                data.append({
-                    "user": {"id": user.id, "username": user.username, "is_superuser": user.is_superuser},
-                    "type": "object_group",
-                    "permission": {"id": p.permission.id, "name": p.permission.name},
-                    "group": {"id": p.group.id, "name": p.group.name} if p.group else None,
-                    "object_perm_id": p.id,
-                    "object": {"id": obj_instance.pk, "str": str(obj_instance)},
-                    "content_type": {
-                        "id": p.permission.content_type.id,
-                        "verbose_name": p.permission.content_type.model_class()._meta.verbose_name
-                    },
-                })
-
-        paginator = CustomPageNumberPagination()
-        result_page = paginator.paginate_queryset(data, request)
-        return paginator.get_paginated_response(result_page)
-
-
-    except Exception as e:
-        logger.exception(f"Ошибка при получении прав пользователей")
-        return Response({"error": "Ошибка сервера", "details": str(e)}, status=500)
 
 @api_view(['GET','PATCH'])
 @permission_classes([AllowAny])

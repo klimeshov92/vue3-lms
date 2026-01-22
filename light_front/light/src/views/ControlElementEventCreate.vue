@@ -176,7 +176,7 @@ const loading = ref(false);
 
 const event_types = [
   //{ label: 'Клиент создан', value: 'client_created' },
-  //{ label: 'Аккаунт создан', value: 'account_created' },
+  { label: 'Аккаунт создан', value: 'account_created' },
   //{ label: 'Задача создана', value: 'task_created' },
   { label: 'Изменился статус дочерней задачи', value: 'child_task_status_changed' },
   { label: 'Истек срок задачи', value: 'task_deadline' },

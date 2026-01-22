@@ -1627,8 +1627,8 @@ class ControlElementEvent(models.Model):
     )
     EVENT_TYPES = [
         #('client_created', 'Клиент создан'),
-        #('account_created', 'Аккаунт создан'),
         #('task_created', 'Задача создана'),
+        ('account_created', 'Аккаунт создан'),
         ('child_task_status_changed', 'Изменился статус дочерней задачи'),
         ('task_deadline', 'Истек срок задачи'),
         ('task_status_changed', 'Изменился статус задачи'),

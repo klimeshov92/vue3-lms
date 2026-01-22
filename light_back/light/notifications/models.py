@@ -10,7 +10,7 @@ class NotificationSettings(models.Model):
         verbose_name='Аккаунт',
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name='notification_settings',
         related_query_name='notification_settings'
     )

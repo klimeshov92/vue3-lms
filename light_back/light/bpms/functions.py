@@ -516,6 +516,9 @@ def execute_assign_task(action, interaction):
         logger.debug(f"Задача с шаблоном {action.task_template} уже существует для взаимодействия {target_interaction}. Пропускаем создание.")
         return
 
+    executor = None
+    executor_type = 'none'
+
     if action.executor_type == 'selected_executor':
         executor_type = 'selected'
         executor = action.executor
@@ -524,6 +527,10 @@ def execute_assign_task(action, interaction):
         if last_task and last_task.executor:
             executor_type = 'selected'
             executor = last_task.executor
+        else:
+            if interaction.object_type == 'account':
+                executor = interaction.account
+
     elif action.executor_type == 'none':
         executor_type = 'none'
         executor = None
