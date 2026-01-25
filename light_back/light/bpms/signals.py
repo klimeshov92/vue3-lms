@@ -4,6 +4,7 @@ from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from django.http import HttpResponseServerError
 from .models import *
+from comments.models import *
 from datetime import datetime, timedelta
 from django.db import transaction
 from .functions import *
@@ -144,6 +145,26 @@ def task_result_create(sender, instance, created, **kwargs):
 
     except Exception as e:
         logger.error(f"Ошибка при обработке сигнала task_result_create: {e}", exc_info=True)
+        if settings.DEBUG:
+            raise
+
+@receiver(post_save, sender=Task)
+def task_comments_create(sender, instance, created, **kwargs):
+    try:
+
+        logger.debug(f"Начало работы сигнала task_comments_create")
+        if created:
+
+            topic, topic_created = Topic.objects.get_or_create(
+                topic_type='task_topic',
+                task=instance,
+                name=f'Топик задачи {instance.name}',
+            )
+            if topic_created:
+                logger.debug(f"Топик создан: {topic.__dict__}")
+
+    except Exception as e:
+        logger.error(f"Ошибка при обработке сигнала task_comments_create: {e}", exc_info=True)
         if settings.DEBUG:
             raise
 
