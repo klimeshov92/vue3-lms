@@ -24,7 +24,24 @@ class TestBaseSerializer(serializers.ModelSerializer):
     def get_str(self, obj):
         return f"{obj.name}"
 
+class TestResultSerializer(serializers.ModelSerializer):
+    status_display = serializers.SerializerMethodField()
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = TestResult
+        fields = '__all__'
+
+    def get_status_display(self, obj):
+        return obj.get_status_display()
+
+    def get_str(self, obj):
+        return f'{obj.task} - {obj.get_status_display()}'
+
 class LastTaskBaseSerializer(serializers.ModelSerializer):
+    result = serializers.SerializerMethodField()
     str = serializers.SerializerMethodField()
     creator = serializers.StringRelatedField()
     editor = serializers.StringRelatedField()
@@ -33,13 +50,33 @@ class LastTaskBaseSerializer(serializers.ModelSerializer):
         model = Task
         fields = '__all__'
 
+    def get_result(self, obj):
+        if obj.task_type == 'test_taking':
+            result = obj.test_result
+            return TestResultSerializer(result, context=self.context).data
+
     def get_str(self, obj):
         return f'{obj.get_task_type_display()} - {obj.name}'
+
+from comments.models import *
+class TopicBaseSerializer(serializers.ModelSerializer):
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = Topic
+        fields = '__all__'
+
+    def get_str(self, obj):
+        return f"{obj.get_topic_type_display()} - {obj.name}"
+
 
 class TestSerializer(serializers.ModelSerializer):
     categories = CategoryBaseSerializer(many=True, required=False)
     avatar = serializers.ImageField(required=False)
     test_sections = serializers.SerializerMethodField()
+    topic = serializers.SerializerMethodField()
     str = serializers.SerializerMethodField()
     last_task = serializers.SerializerMethodField()
     self_assignment_task_template = serializers.SerializerMethodField()
@@ -58,6 +95,12 @@ class TestSerializer(serializers.ModelSerializer):
 
     def get_str(self, obj):
         return f"{obj.name}"
+
+    def get_topic(self, obj):
+        topic = Topic.objects.filter(
+            test_id=obj.id,
+        ).order_by('-id').first()
+        return TopicBaseSerializer(topic, context=self.context).data if topic else None
 
     def get_last_task(self, obj):
         last_task = Task.objects.filter(

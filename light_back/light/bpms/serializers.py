@@ -13,6 +13,8 @@ from tests.serializers import *
 from tests.models import *
 from events.serializers import *
 from events.models import *
+from chats.models import *
+from comments.models import *
 from django.conf import settings
 import json
 
@@ -162,10 +164,34 @@ class TaskTemplateEditSerializer(serializers.ModelSerializer):
         validated_data['editor'] = self.context['request'].user
         return super().update(instance, validated_data)
 
+class LastTaskBaseSerializer(serializers.ModelSerializer):
+    result = serializers.SerializerMethodField()
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = Task
+        fields = '__all__'
+
+    def get_result(self, obj):
+        if obj.task_type == 'common_task':
+            result = obj.task_result
+            return TaskResultSerializer(result, context=self.context).data
+        elif obj.task_type == 'plan_implementation':
+            result = obj.plan_result
+            return PlanResultSerializer(result, context=self.context).data
+
+    def get_str(self, obj):
+        return f'{obj.get_task_type_display()} - {obj.name}'
+
 class PublicTaskSerializer(serializers.ModelSerializer):
     task_template = TaskTemplateBaseSerializer(required=False)
     categories = CategoryBaseSerializer(many=True, required=False)
+    topic = serializers.SerializerMethodField()
     str = serializers.SerializerMethodField()
+    last_task = serializers.SerializerMethodField()
+    self_assignment_task_template = serializers.SerializerMethodField()
     accounts_group_object_permissions = serializers.SerializerMethodField()
     account_object_permissions = serializers.SerializerMethodField()
     creator = serializers.StringRelatedField()
@@ -177,6 +203,28 @@ class PublicTaskSerializer(serializers.ModelSerializer):
 
     def get_str(self, obj):
         return f'{obj.name}'
+
+    def get_topic(self, obj):
+        topic = Topic.objects.filter(
+            public_task_id=obj.id,
+        ).order_by('-id').first()
+        return TopicBaseSerializer(topic, context=self.context).data if topic else None
+
+    def get_last_task(self, obj):
+        last_task = Task.objects.filter(
+            task_template_id=obj.task_template.id,
+            executor=self.context['request'].user,
+            task_result__isnull=False,
+        ).order_by('-id').first()
+        return LastTaskBaseSerializer(last_task, context=self.context).data if last_task else None
+
+    def get_self_assignment_task_template(self, obj):
+        self_assignment_task_template = TaskTemplate.objects.filter(
+            id=obj.task_template.id,
+            self_assignment=True,
+        ).first()
+        self_assignment_task_template_id = self_assignment_task_template.id if self_assignment_task_template else None
+        return self_assignment_task_template_id
 
     def get_accounts_group_object_permissions(self, obj):
         content_type = ContentType.objects.get_for_model(obj.__class__)
@@ -213,7 +261,10 @@ class PublicTaskEditSerializer(serializers.ModelSerializer):
 class PublicPlanSerializer(serializers.ModelSerializer):
     task_template = TaskTemplateBaseSerializer(required=False)
     categories = CategoryBaseSerializer(many=True, required=False)
+    topic = serializers.SerializerMethodField()
     str = serializers.SerializerMethodField()
+    last_task = serializers.SerializerMethodField()
+    self_assignment_task_template = serializers.SerializerMethodField()
     accounts_group_object_permissions = serializers.SerializerMethodField()
     account_object_permissions = serializers.SerializerMethodField()
     creator = serializers.StringRelatedField()
@@ -225,6 +276,28 @@ class PublicPlanSerializer(serializers.ModelSerializer):
 
     def get_str(self, obj):
         return f'{obj.name}'
+
+    def get_topic(self, obj):
+        topic = Topic.objects.filter(
+            public_plan_id=obj.id,
+        ).order_by('-id').first()
+        return TopicBaseSerializer(topic, context=self.context).data if topic else None
+
+    def get_last_task(self, obj):
+        last_task = Task.objects.filter(
+            task_template_id=obj.task_template.id,
+            executor=self.context['request'].user,
+            task_result__isnull=False,
+        ).order_by('-id').first()
+        return LastTaskBaseSerializer(last_task, context=self.context).data if last_task else None
+
+    def get_self_assignment_task_template(self, obj):
+        self_assignment_task_template = TaskTemplate.objects.filter(
+            id=obj.task_template.id,
+            self_assignment=True,
+        ).first()
+        self_assignment_task_template_id = self_assignment_task_template.id if self_assignment_task_template else None
+        return self_assignment_task_template_id
 
     def get_accounts_group_object_permissions(self, obj):
         content_type = ContentType.objects.get_for_model(obj.__class__)
@@ -289,6 +362,30 @@ class ResultTaskSerializer(serializers.ModelSerializer):
         outcomes = ControlElement.objects.filter(task_template=obj.task_template)
         return ControlElementSerializer(outcomes, many=True, context=self.context).data
 
+class ChatBaseSerializer(serializers.ModelSerializer):
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = Chat
+        fields = '__all__'
+
+    def get_str(self, obj):
+        return f"{obj.get_chat_type_display()} - {obj.name}"
+
+class TopicBaseSerializer(serializers.ModelSerializer):
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = Topic
+        fields = '__all__'
+
+    def get_str(self, obj):
+        return f"{obj.get_topic_type_display()} - {obj.name}"
+
 class TaskSerializer(serializers.ModelSerializer):
     #object_type_display = serializers.SerializerMethodField()
     task_template = TaskTemplateBaseSerializer(required=False)
@@ -313,6 +410,7 @@ class TaskSerializer(serializers.ModelSerializer):
     child_tasks = serializers.SerializerMethodField()
     result = serializers.SerializerMethodField()
     outcomes = serializers.SerializerMethodField()
+    topic = serializers.SerializerMethodField()
     str = serializers.SerializerMethodField()
     accounts_group_object_permissions = serializers.SerializerMethodField()
     account_object_permissions = serializers.SerializerMethodField()
@@ -342,7 +440,7 @@ class TaskSerializer(serializers.ModelSerializer):
             return PlanResultSerializer(result, context=self.context).data
         elif obj.task_type == 'news_reading':
             result = obj.new_result
-            return MaterialResultSerializer(result, context=self.context).data
+            return NewResultSerializer(result, context=self.context).data
         elif obj.task_type == 'material_review':
             result = obj.material_result
             return MaterialResultSerializer(result, context=self.context).data
@@ -359,6 +457,12 @@ class TaskSerializer(serializers.ModelSerializer):
     def get_outcomes(self, obj):
         outcomes = ControlElement.objects.filter(task_template=obj.task_template)
         return ControlElementSerializer(outcomes, many=True, context=self.context).data
+
+    def get_topic(self, obj):
+        topic = Topic.objects.filter(
+            task_id=obj.id,
+        ).order_by('-id').first()
+        return TopicBaseSerializer(topic, context=self.context).data if topic else None
 
     def get_str(self, obj):
         if obj.item:
@@ -508,6 +612,7 @@ class QueueSerializer(serializers.ModelSerializer):
     categories = CategoryBaseSerializer(many=True, required=False)
     queue_executors = serializers.SerializerMethodField()
     queue_tasks = serializers.SerializerMethodField()
+    topic = serializers.SerializerMethodField()
     str = serializers.SerializerMethodField()
     accounts_group_object_permissions = serializers.SerializerMethodField()
     account_object_permissions = serializers.SerializerMethodField()
@@ -528,6 +633,12 @@ class QueueSerializer(serializers.ModelSerializer):
 
     def get_str(self, obj):
         return obj.name
+
+    def get_topic(self, obj):
+        topic = Topic.objects.filter(
+            task_id=obj.id,
+        ).order_by('-id').first()
+        return TopicBaseSerializer(topic, context=self.context).data if topic else None
 
     def get_accounts_group_object_permissions(self, obj):
         content_type = ContentType.objects.get_for_model(obj.__class__)

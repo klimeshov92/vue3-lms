@@ -22,6 +22,9 @@
                 <span class="detail-card-text-label">Статус:</span> {{ state.object.status_display || 'Нет статуса' }} 
               </div>
               <div class="detail-card-text-elem">
+                <span class="detail-card-text-label">Статус задачи:</span> {{ state.object.last_task?.result ? state.object.last_task?.result.status_display : 'Не назначено' }}
+              </div>
+              <div class="detail-card-text-elem">
                 <span class="detail-card-text-label">Количество участников:</span> {{ state.object.number_of_participants || 'Нет количества участников' }}
               </div>
               <div class="detail-card-text-elem">
@@ -36,6 +39,24 @@
             </div>
             <div class="detail-menu button-group">
 
+              <a
+                v-if="state.object.last_task"
+                :href="state.object.event_template.link"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="button"
+              >
+                Открыть слот
+              </a>
+
+              <button 
+                v-if="state.object.last_task" 
+                @click="confirmParticipation"
+                class="button"
+              >
+                {{ state.object?.last_task?.result?.confirmed ? 'Отменить участие' : 'Подтвердить участие' }} 
+              </button>
+
               <router-link 
                 v-if="state.object.last_task" 
                 :to="{ name: 'TaskDetail', params: { id: state.object.last_task.id } }"
@@ -45,7 +66,7 @@
               </router-link>
 
               <button 
-                v-if="state.canSelfAssignment && !state.object.last_task" 
+                v-if="state.canSelfAssignment"
                 @click="selfAssignment(state.object.self_assignment_task_template)"
                 class="button"
               >
@@ -108,6 +129,9 @@
 
             <div v-if="activeTab === 'details'" class="detail-tab">
               <div class="detail-tab-elem">
+                <span class="detail-tab-label">Статус задачи:</span> {{ state.object.last_task?.result ? state.object.last_task?.result.status_display : 'Не назначено' }}
+              </div>
+              <div class="detail-tab-elem">
                 <span class="detail-tab-label">Статус:</span> {{ state.object.status_display || 'Нет статуса' }}
               </div>
               <div class="detail-tab-elem">
@@ -140,6 +164,82 @@
               <div class="detail-tab-elem">
                 <span class="detail-tab-label">Редактор:</span> {{ state.object.editor ? state.object.editor : 'Нет редактора' }}
               </div>
+            </div>
+
+            <div v-if="activeTab === 'tasks'" class="table-tab">
+              <div v-if="state.canAdmin">
+                <div v-if="state.object.tasks && state.object.tasks.length > 0" class="table-tab-table-outer">
+                  <div class="table-tab-table-inner">
+                    <table>
+                      <thead>
+                          <tr>
+                              <th>Участник</th>
+                              <th>Зарегистрирован</th>
+                              <th>Подтверждение участия</th>
+                              <th>Статус</th>
+                              <th>
+                                Действия
+                              </th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="task in state.object.tasks" :key="task.id">
+                          <td>{{ task.executor ? task.executor : 'Нет данных' }}</td>
+                          <td>{{ task.created ? formatDateTime(task.created) : 'Нет данных' }}</td>
+                          <td>{{ task.result?.confirmed ? 'Да' : 'Нет' }}</td>
+                          <td>{{ task.result?.status_display ? task.result.status_display : 'Нет данных' }}</td>
+                          <td>
+                            <div v-if="state.canAdmin">
+                              <div class="table-tab-menu">
+                                <button 
+                                  v-if="state.canAdmin && task.result?.status != 'completed'" 
+                                  @click="markСompletion(task.id, 'completed')"
+                                  class="table-tab-button"
+                                >
+                                  Выполнено
+                                </button>
+                                <button 
+                                  v-if="state.canAdmin && task.result?.status != 'failed'" 
+                                  @click="markСompletion(task.id, 'failed')"
+                                  class="table-tab-button"
+                                >
+                                  Провалено 
+                                </button>                         
+                              </div>
+                            </div>
+                            <div v-else> 
+                              -
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div v-else >
+                  <div class="none-border">Нет подзадач</div>
+                </div>
+              </div>
+
+              <div v-else>
+                <div class="none-border">У вас нет разрешения на просмотр</div>
+              </div>
+
+              <div v-if="state.canAddTask" class="tab-menu minibutton-group">
+                <router-link
+                  v-if="state.canAddTask"
+                  :to="{ name: 'TaskCreate', query: { planId: state.object.id } }"
+                  class="minibutton"
+                >
+                  Создать
+                </router-link>
+              </div>
+            </div>
+
+            <div v-if="activeTab === 'messages'" class="topic-tab">
+              
+              <TopicMessages :topic_id="state.object?.topic.id" />
+
             </div>
 
             <div v-if="activeTab === 'accountsGroupObjectPermissions'" class="table-tab">
@@ -183,6 +283,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { formatDate, formatDateTime, baseUrl, isTokenValid } from '../utils/utils'; 
 import AccountObjectPermissions from '../components/AccountObjectPermissions.vue';
 import AccountsGroupObjectPermissions from '../components/AccountsGroupObjectPermissions.vue'; 
+import TopicMessages from '../components/TopicMessages.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -194,6 +295,7 @@ const state = reactive({
   globalPermissionsList: [],
   objectPermissionsDict: {},
   canViewEventSlot: false,
+  canAdmin: false,
   canSelfAssignment: false,
   canEditEventSlot: false,
   canDeleteEventSlot: false,
@@ -273,6 +375,51 @@ const selfAssignment = async (id) => {
   }
 };
 
+const confirmParticipation = async () => {
+  let token = localStorage.getItem('access_token');
+  const validToken = isTokenValid(token);
+  if (token && !validToken) { 
+    router.push({ name: 'Login' });
+    return;
+  }
+  const id = state.object.last_task.id;
+  try {
+    const response = await axios.patch(`${baseUrl}/confirm_participation/${id}/`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    console.log('Ответ об отметки об участии:', response.data);
+    state.object.last_task.result.confirmed = response.data.confirmed;
+    const task = state.object.tasks.find(task => task.id === id);
+    task.result.confirmed = response.data.confirmed
+
+  } catch (error) {
+    console.error('При отметке об участии:', error);
+  }
+};
+
+const markСompletion = async (id, status) => {
+  let token = localStorage.getItem('access_token');
+  const validToken = isTokenValid(token);
+  if (token && !validToken) { 
+    router.push({ name: 'Login' });
+    return;
+  }
+  try {
+    const response = await axios.patch(`${baseUrl}/mark_completion/${id}/${status}/`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    console.log('Ответ об отметки об участии:', response.data);
+    const task = state.object.tasks.find(task => task.id === id);
+    if (task && task.result) {
+      task.result.status = status;
+      task.result.status_display = status === 'completed' ? 'Выполнена' : status === 'failed' ? 'Провалена' : task.result.status_display;
+    }
+
+  } catch (error) {
+    console.error('При отметке об участии:', error);
+  }
+};
+
 const loadUserPermissions = async () => {
   let token = localStorage.getItem('access_token');
   const validToken = isTokenValid(token);
@@ -320,7 +467,12 @@ const loadUserPermissions = async () => {
       state.objectPermissionsDict['events.view_event_slot'].includes(Number(id)));
     console.log('Права на просмотр аккаунтов:', state.canViewEventSlot);
 
-    state.canSelfAssignment = state.canViewEventSlot && state.object.self_assignment_task_template
+    state.canAdmin = Array.isArray(state.object.event_template.admins) && state.object.event_template.admins.some(admin => admin.id === userPermissions.user_id);
+    console.log('Права на администрирование:', state.canAdmin);
+
+    state.canSelfAssignment = state.canViewEventSlot && 
+    state.object.self_assignment_task_template && 
+    (!state.object.last_task || (state.object.last_task?.result?.status == 'failed' || state.object.last_task?.result?.status == 'canceled'))
     console.log('Права на самоназначение:', state.canSelfAssignment);
 
     state.canEditEventSlot = state.globalPermissionsList.includes('events.change_event_slot') ||
@@ -363,6 +515,8 @@ const back = () => {
 const tabs = computed(() => [
   { name: 'desc', label: 'Описание' },
   { name: 'details', label: 'Детали' },
+  { name: 'tasks', label: 'Участники' },
+  state.object.topic ? { name: 'messages', label: 'Комментарии' } : null,
   state.canViewAccountsGroupObjectPermission ? { name: 'accountsGroupObjectPermissions', label: 'Объектные права групп' } : null,
   state.canViewAccountObjectPermission ? { name: 'accountObjectPermissions', label: 'Объектные права аккаунтов' } : null,
 ].filter(Boolean));

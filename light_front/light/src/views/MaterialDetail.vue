@@ -19,6 +19,9 @@
             </div>
             <div class="detail-card-text">
               <div class="detail-card-text-elem">
+                <span class="detail-card-text-label">Статус задачи:</span> {{ state.object.last_task?.result ? state.object.last_task?.result.status_display : 'Не назначено' }}
+              </div>
+              <div class="detail-card-text-elem">
                 <span class="detail-card-text-label">Категории:</span>
                 {{ state.object.categories.length > 0 ? state.object.categories.map(category => category.name).join(', ') : 'Нет категорий' }}
               </div>
@@ -42,7 +45,7 @@
               </router-link>
 
               <button 
-                v-if="state.canSelfAssignment && !state.object.last_task" 
+                v-if="state.canSelfAssignment"
                 @click="selfAssignment(state.object.self_assignment_task_template)"
                 class="button"
               >
@@ -106,6 +109,9 @@
 
             <div v-if="activeTab === 'details'" class="detail-tab">
               <div class="detail-tab-elem">
+                <span class="detail-tab-label">Статус задачи:</span> {{ state.object.last_task?.result ? state.object.last_task?.result.status_display : 'Не назначено' }}
+              </div>
+              <div class="detail-tab-elem">
                 <span class="detail-tab-label">Категории:</span>
                 {{ state.object.categories.length > 0 ? state.object.categories.map(category => category.name).join(', ') : 'Нет категорий' }}
               </div>
@@ -121,6 +127,12 @@
               <div class="detail-tab-elem">
                 <span class="detail-tab-label">Редактор:</span> {{ state.object.editor ? state.object.editor : 'Нет редактора' }}
               </div>
+            </div>
+
+            <div v-if="activeTab === 'messages'" class="topic-tab">
+              
+              <TopicMessages :topic_id="state.object?.topic.id" />
+
             </div>
 
             <div v-if="activeTab === 'accountsGroupObjectPermissions'" class="table-tab">
@@ -164,6 +176,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { formatDate, formatDateTime, baseUrl, isTokenValid } from '../utils/utils'; 
 import AccountObjectPermissions from '../components/AccountObjectPermissions.vue';
 import AccountsGroupObjectPermissions from '../components/AccountsGroupObjectPermissions.vue'; 
+import TopicMessages from '../components/TopicMessages.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -301,7 +314,9 @@ const loadUserPermissions = async () => {
       state.objectPermissionsDict['materials.view_material'].includes(Number(id)));
     console.log('Права на просмотр аккаунтов:', state.canViewMaterial);
 
-    state.canSelfAssignment = state.canViewMaterial && state.object.self_assignment_task_template
+    state.canSelfAssignment = state.canViewMaterial && state.object.self_assignment_task_template && 
+    state.object.self_assignment_task_template && 
+    (!state.object.last_task || (state.object.last_task?.result?.status == 'failed' || state.object.last_task?.result?.status == 'canceled'))
     console.log('Права на самоназначение:', state.canSelfAssignment);
 
     state.canEditMaterial = state.globalPermissionsList.includes('materials.change_material') ||
@@ -345,6 +360,7 @@ const back = () => {
 const tabs = computed(() => [
   { name: 'desc', label: 'Описание' },
   { name: 'details', label: 'Детали' },
+  state.object.topic ? { name: 'messages', label: 'Комментарии' } : null,
   state.canViewAccountsGroupObjectPermission ? { name: 'accountsGroupObjectPermissions', label: 'Объектные права групп' } : null,
   state.canViewAccountObjectPermission ? { name: 'accountObjectPermissions', label: 'Объектные права аккаунтов' } : null,
 ].filter(Boolean));

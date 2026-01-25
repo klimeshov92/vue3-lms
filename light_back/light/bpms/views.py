@@ -200,7 +200,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny, ObjectPermission]
     pagination_class = CustomPageNumberPagination
     filterset_class = TaskFilter
-    ordering_fields = ['planned_end', 'plan__name', 'item', 'name']
+    ordering_fields = ['planned_end', 'plan__name', 'name']
     ordering = ['planned_end']
 
     def get_serializer_class(self):
@@ -783,7 +783,13 @@ def self_assignment(request, task_template_id, public_id=None):
                     user.has_perm(permission_codename) or
                     user.has_perm(permission_codename, task_template.test)
             )
-        if task_type == 'event_participation':
+        if task_type == 'event_participation' and not task_template.event_slot:
+            permission_codename = 'events.view_event_template'
+            has_permission = (
+                    user.has_perm(permission_codename) or
+                    user.has_perm(permission_codename, task_template.event_template)
+            )
+        if task_type == 'event_participation' and task_template.event_slot:
             permission_codename = 'events.view_event_slot'
             has_permission = (
                     user.has_perm(permission_codename) or

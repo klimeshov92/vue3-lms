@@ -8,10 +8,15 @@
       </div>
 
       <form @submit.prevent="createObject" class="form" id="form">
+
+        <div class="form-field">
+          <label for="avatar" class="form-label">Аватар:</label>
+          <input type="file" id="avatar" @change="onAvatarFileChange" class="form-input" />
+        </div>
         
         <div class="form-field">
           <label for="upload_file" class="form-label">Загружаемый файл:</label>
-          <input type="file" id="upload_file" @change="onFileChange" class="form-input" />
+          <input type="file" id="upload_file" @change="onZipFileChange" class="form-input" />
           <span v-if="errors.upload_file" class="error">{{ errors.upload_file }}</span>
         </div>
 
@@ -135,11 +140,19 @@ const loadCategories = async () => {
 };
 
 const uploadFile = ref(null);
-const onFileChange = (event) => {
+const onZipFileChange = (event) => {
   const file = event.target.files[0];
   if (file) {
     uploadFile.value = file;
     console.log('Проверка файла:', uploadFile.value);
+  }
+};
+
+const avatarFile = ref(null);
+const onAvatarFileChange = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    avatarFile.value = file;
   }
 };
 
@@ -198,6 +211,21 @@ const createObject = async () => {
       });
 
       console.log('Файл успешно обновлен:', filePatchResponse.data);
+    }
+
+    if (avatarFile.value) {
+      const avatarFormData = new FormData();
+      avatarFormData.append('avatar', avatarFile.value);
+
+      const avatarPatchUrl = `${baseUrl}/courses/${jsonResponse.data.id}/`;
+      const avatarPatchResponse = await axios.patch(avatarPatchUrl, avatarFormData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log('Аватар успешно обновлен:', avatarPatchResponse.data);
     }
 
     router.push({ name: 'CourseDetail', params: { id: jsonResponse.data.id }  });

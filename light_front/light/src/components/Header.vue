@@ -180,7 +180,7 @@
       <router-link :to="{ name: 'NewList' }" 
         @click="toggleMenu" 
         class="header-menu_link"
-        v-if="canViewNew">
+        v-if="state.canViewNew">
         <div class="header-menu_link-items-inner">
           <div>
             Новости

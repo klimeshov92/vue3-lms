@@ -529,6 +529,7 @@ def execute_assign_task(action, interaction):
             executor = last_task.executor
         else:
             if interaction.object_type == 'account':
+                executor_type = 'selected'
                 executor = interaction.account
 
     elif action.executor_type == 'none':

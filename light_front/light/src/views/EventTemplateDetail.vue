@@ -19,6 +19,9 @@
             </div>
             <div class="detail-card-text">
               <div class="detail-card-text-elem">
+                <span class="detail-card-text-label">Статус задачи:</span> {{ state.object.last_task?.result ? state.object.last_task?.result.status_display : 'Не назначено' }}
+              </div>
+              <div class="detail-card-text-elem">
                 <span class="detail-card-text-label">Категории:</span>
                 {{ state.object.categories.length > 0 ? state.object.categories.map(category => category.name).join(', ') : 'Нет категорий' }}
               </div>
@@ -42,6 +45,16 @@
             </div>
             <div class="detail-menu button-group">
 
+              <a
+                v-if="state.object.last_task"
+                :href="state.object.link"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="button"
+              >
+                Открыть слот
+              </a>
+
               <router-link 
                 v-if="state.object.last_task" 
                 :to="{ name: 'TaskDetail', params: { id: state.object.last_task.id } }"
@@ -49,6 +62,14 @@
               >
                 Задача
               </router-link>
+
+              <button 
+                v-if="state.canSelfAssignment"
+                @click="selfAssignment(state.object.self_assignment_task_template)"
+                class="button"
+              >
+                Самоназначение
+              </button>
 
               <router-link 
                 v-if="state.canEditEventTemplate && !state.object.last_task" 
@@ -107,6 +128,9 @@
 
             <div v-if="activeTab === 'details'" class="detail-tab">
               <div class="detail-tab-elem">
+                <span class="detail-tab-label">Статус задачи:</span> {{ state.object.last_task?.result ? state.object.last_task?.result.status_display : 'Не назначено' }}
+              </div>
+              <div class="detail-tab-elem">
                 <span class="detail-tab-label">Форомат:</span> {{ state.object.format_display || 'Нет формата' }}
               </div>
               <div v-if="state.object.format == 'face_to_face' || state.object.format == 'mixed'" class="detail-tab-elem">
@@ -137,6 +161,11 @@
               </div>
             </div>
 
+            <div v-if="activeTab === 'messages'" class="topic-tab">
+              
+              <TopicMessages :topic_id="state.object?.topic.id" />
+
+            </div>
             
             <div v-if="activeTab === 'accountsGroupObjectPermissions'" class="table-tab">
 
@@ -179,6 +208,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { formatDate, formatDateTime, baseUrl, isTokenValid } from '../utils/utils'; 
 import AccountObjectPermissions from '../components/AccountObjectPermissions.vue';
 import AccountsGroupObjectPermissions from '../components/AccountsGroupObjectPermissions.vue'; 
+import TopicMessages from '../components/TopicMessages.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -192,6 +222,7 @@ const state = reactive({
   canViewEventTemplate: false,
   canEditEventTemplate: false,
   canDeleteEventTemplate: false,
+  canSelfAssignment: false,
   canViewAccountObjectPermission: false,
   canAddAccountObjectPermission: false,
   canDeleteAccountObjectPermission: false,
@@ -250,6 +281,24 @@ const confirmEventTemplateDelete = async () => {
   }
 };
 
+const selfAssignment = async (id) => {
+  let token = localStorage.getItem('access_token');
+  const validToken = isTokenValid(token);
+  if (token && !validToken) { 
+    router.push({ name: 'Login' });
+    return;
+  }
+  try {
+    const self_assignment = await axios.post(`${baseUrl}/self_assignment/${id}/`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    console.log('Самоназначение:', self_assignment.data); 
+    router.push({ name: 'TaskDetail', params: { id: self_assignment.data.id } });
+  } catch (error) {
+    console.error('Ошибка самоназначения:', error);
+  }
+};
+
 const loadUserPermissions = async () => {
   let token = localStorage.getItem('access_token');
   const validToken = isTokenValid(token);
@@ -297,6 +346,11 @@ const loadUserPermissions = async () => {
       state.objectPermissionsDict['events.view_event_template'].includes(Number(id)));
     console.log('Права на просмотр аккаунтов:', state.canViewEventTemplate);
 
+    state.canSelfAssignment = state.canViewEventTemplate && 
+    state.object.self_assignment_task_template && state.object.self_assignment_task_template && 
+    (!state.object.last_task || (state.object.last_task?.result?.status == 'failed' || state.object.last_task?.result?.status == 'canceled'))
+    console.log('Права на самоназначение:', state.canSelfAssignment);
+
     state.canEditEventTemplate = state.globalPermissionsList.includes('events.change_event_template') ||
       (Array.isArray(state.objectPermissionsDict['events.change_event_template']) &&
       state.objectPermissionsDict['events.change_event_template'].includes(Number(id)));
@@ -337,6 +391,7 @@ const back = () => {
 const tabs = computed(() => [
   { name: 'desc', label: 'Описание' },
   { name: 'details', label: 'Детали' },
+  state.object.topic ? { name: 'messages', label: 'Комментарии' } : null,
   state.canViewAccountsGroupObjectPermission ? { name: 'accountsGroupObjectPermissions', label: 'Объектные права групп' } : null,
   state.canViewAccountObjectPermission ? { name: 'accountObjectPermissions', label: 'Объектные права аккаунтов' } : null,
 ].filter(Boolean));

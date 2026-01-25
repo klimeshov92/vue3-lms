@@ -19,6 +19,9 @@
             </div>
             <div class="detail-card-text">
               <div class="detail-card-text-elem">
+                <span class="detail-card-text-label">Статус задачи:</span> {{ state.object.last_task?.result ? state.object.last_task?.result.status_display : 'Не назначено' }}
+              </div>
+              <div class="detail-card-text-elem">
                 <span class="detail-card-text-label">Шаблон задачи:</span> {{ state.object.task_template ? state.object.task_template.str : 'Нет плана' }}
               </div>
               <div class="detail-card-text-elem">
@@ -37,8 +40,8 @@
               </router-link>
 
               <button 
-                v-if="state.canSelfAssignment && !state.object.last_task" 
-                @click="selfAssignment(state.object.task_template)"
+                v-if="state.canSelfAssignment"
+                @click="selfAssignment(state.object.task_template.id)"
                 class="button"
               >
                 Самоназначение
@@ -101,6 +104,9 @@
 
             <div v-if="activeTab === 'details'" class="detail-tab">
               <div class="detail-tab-elem">
+                <span class="detail-tab-label">Статус задачи:</span> {{ state.object.last_task?.result ? state.object.last_task?.result.status_display : 'Не назначено' }}
+              </div>
+              <div class="detail-tab-elem">
                 <span class="detail-tab-label">Шаблон задачи:</span> {{ state.object.task_template ? state.object.task_template.str : 'Нет плана' }}
               </div>
               <div class="detail-tab-elem">
@@ -119,6 +125,12 @@
               <div class="detail-tab-elem">
                 <span class="detail-tab-label">Редактор:</span> {{ state.object.editor ? state.object.editor : 'Нет редактора' }}
               </div>
+            </div>
+
+            <div v-if="activeTab === 'messages'" class="topic-tab">
+              
+              <TopicMessages :topic_id="state.object?.topic.id" />
+
             </div>
 
             <div v-if="activeTab === 'accountsGroupObjectPermissions'" class="table-tab">
@@ -162,6 +174,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { formatDate, formatDateTime, baseUrl, isTokenValid } from '../utils/utils'; 
 import AccountObjectPermissions from '../components/AccountObjectPermissions.vue';
 import AccountsGroupObjectPermissions from '../components/AccountsGroupObjectPermissions.vue'; 
+import TopicMessages from '../components/TopicMessages.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -242,7 +255,7 @@ const selfAssignment = async (id) => {
     return;
   }
   try {
-    const self_assignment = await axios.post(`${baseUrl}/self_assignment/${id}/public_plan/${id}/`, {}, {
+    const self_assignment = await axios.post(`${baseUrl}/self_assignment/${id}/public_plan/${state.object.id}/`, {}, {
       headers: { Authorization: `Bearer ${token}` },
     });
     console.log('Самоназначение:', self_assignment.data); 
@@ -299,7 +312,9 @@ const loadUserPermissions = async () => {
       state.objectPermissionsDict['bpms.view_public_plan'].includes(Number(id)));
     console.log('Права на просмотр аккаунтов:', state.canViewPublicPlan);
 
-    state.canSelfAssignment = state.canViewPublicPlan && state.object.self_assignment_task_template
+    state.canSelfAssignment = state.canViewPublicPlan && state.object.self_assignment_task_template && 
+    state.object.self_assignment_task_template && 
+    (!state.object.last_task || (state.object.last_task?.result?.status == 'failed' || state.object.last_task?.result?.status == 'canceled'))
     console.log('Права на самоназначение:', state.canSelfAssignment);
 
     state.canEditPublicPlan = state.globalPermissionsList.includes('bpms.change_public_plan') ||
@@ -342,6 +357,7 @@ const back = () => {
 const tabs = computed(() => [
   { name: 'desc', label: 'Описание' },
   { name: 'details', label: 'Детали' },
+  state.object.topic ? { name: 'messages', label: 'Комментарии' } : null,
   state.canViewAccountsGroupObjectPermission ? { name: 'accountsGroupObjectPermissions', label: 'Объектные права групп' } : null,
   state.canViewAccountObjectPermission ? { name: 'accountObjectPermissions', label: 'Объектные права аккаунтов' } : null,
 ].filter(Boolean));

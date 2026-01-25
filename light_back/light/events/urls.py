@@ -18,5 +18,6 @@ urlpatterns = [
    # Подключаем все маршруты, которые создал роутер
    path('', include(router.urls)),
    path('confirm_participation/<int:task_id>/', confirm_participation, name='confirm_participation'),
+   path('mark_completion/<int:task_id>/<str:status>/', mark_completion, name='mark_completion'),
    path('event_slot_select/<int:task_id>/', event_slot_select, name='event_slot_select'),
 ]

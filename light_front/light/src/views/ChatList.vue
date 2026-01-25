@@ -103,7 +103,8 @@
 
             <div class="list-card-text">
               <div class="list-card-text-elem">
-                <span class="list-card-text-label">Тип чата:</span> {{ item.chat_type_display || 'Нет типа задачи' }}
+                <span class="list-card-text-label">Категории:</span>
+                {{ item.categories.length > 0 ? item.categories.map(category => category.name).join(', ') : 'Нет категорий' }}
               </div>
             </div>
 

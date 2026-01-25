@@ -5,26 +5,11 @@
         <div class="detail-card"> 
           <div class="detail-card-info">
             <div class="detail-header"> 
-              <div v-if="state.object.chat_type == 'common_chat'" class="detail-header-title">
+              <div class="detail-header-title">
                 <h1>{{ state.object.name || 'Безымянный чат' }}</h1>
-              </div>
-              <div v-if="state.object.chat_type == 'task_chat'" class="detail-header-title">
-                <h1>{{ state.object.task?.str || 'Безымянный чат' }}</h1>
-              </div>
-              <div v-if="state.object.chat_type == 'queue_chat'" class="detail-header-title">
-                <h1>{{ state.object.queue?.str || 'Безымянный чат' }}</h1>
               </div>
             </div>
             <div class="detail-card-text">
-              <div class="detail-card-text-elem">
-                <span class="detail-card-text-label">Тип чата:</span> {{ state.object.chat_type_display || 'Нет типа чата' }}
-              </div>
-              <div v-if="state.object.chat_type == 'task_chat'" class="detail-card-text-elem">
-                <span class="detail-card-text-label">Задача:</span> {{ state.object.task ? state.object.task.str : 'Нет задачи' }}
-              </div>
-              <div v-if="state.object.chat_type == 'queue_chat'" class="detail-card-text-elem">
-                <span class="detail-card-text-label">Очередь:</span> {{ state.object.queue ? state.object.queue.str : 'Нет очереди' }}
-              </div>
               <div class="detail-card-text-elem">
                 <span class="detail-card-text-label">Категории:</span>
                 {{ state.object.categories.length > 0 ? state.object.categories.map(category => category.name).join(', ') : 'Нет категорий' }}
@@ -87,15 +72,6 @@
             </div>
 
             <div v-if="activeTab === 'details'" class="detail-tab">
-              <div class="detail-tab-elem">
-                <span class="detail-tab-label">Тип чата:</span> {{ state.object.chat_type_display || 'Нет типа чата' }}
-              </div>
-              <div v-if="state.object.chat_type == 'task_chat'" class="detail-tab-elem">
-                <span class="detail-tab-label">Задача:</span> {{ state.object.task ? state.object.task.str : 'Нет задачи' }}
-              </div>
-              <div v-if="state.object.chat_type == 'queue_chat'" class="detail-tab-elem">
-                <span class="detail-tab-label">Очередь:</span> {{ state.object.queue ? state.object.queue.str : 'Нет очереди' }}
-              </div>
               <div class="detail-tab-elem">
                 <span class="detail-tab-label">Категории:</span>
                 {{ state.object.categories.length > 0 ? state.object.categories.map(category => category.name).join(', ') : 'Нет категорий' }}

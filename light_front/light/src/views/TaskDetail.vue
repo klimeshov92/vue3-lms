@@ -62,7 +62,7 @@
                 <span class="detail-card-text-label">Мероприятие:</span> {{ state.object.event_template.str || 'Нет мероприятия' }}
               </div>
               <div v-if="state.object.task_type == 'event_participation'" class="detail-card-text-elem">
-                <span class="detail-card-text-label">Слот мероприятия:</span> {{ state.object.event_slot.str || 'Нет выбранного слота мероприятия' }}
+                <span class="detail-card-text-label">Слот мероприятия:</span> {{ state.object.event_slot?.str || 'Нет выбранного слота мероприятия' }}
               </div>
               <div v-if="state.object.task_type == 'event_participation' && ( state.object.event_template?.format == 'face_to_face' || state.object.event_template?.format == 'mixed') " class="detail-card-text-elem">
                 <span class="detail-card-text-label">Локация:</span> {{ state.object.event_template.location || 'Нет локации' }}
@@ -419,18 +419,7 @@
                                   class="table-tab-button"
                                 >
                                   Удалить
-                                </button>
-                                <div v-if="showChildTaskDeleteModal" class="modal-overlay">
-                                  <div class="modal">
-                                    <div class="modal-header">
-                                      <h2 class="modal-header-h2">Удаление {{ selectedChildTask.str || 'Безымянная подзадача' }}</h2>
-                                    </div>
-                                    <div class="minibutton-group modal-menu">
-                                      <button @click="confirmChildTaskDelete(selectedChildTask.id)" class="minibutton">Подтвердить</button>
-                                      <button @click="closeChildTaskDeleteModal" class="minibutton">Отменить</button>
-                                    </div>
-                                  </div>
-                                </div>                            
+                                </button>                           
                               </div>
                             </div>
                             <div v-else> 
@@ -441,6 +430,17 @@
                       </tbody>
                     </table>
                   </div>
+                  <div v-if="showChildTaskDeleteModal" class="modal-overlay">
+                    <div class="modal">
+                      <div class="modal-header">
+                        <h2 class="modal-header-h2">Удаление {{ selectedChildTask.str || 'Безымянная подзадача' }}</h2>
+                      </div>
+                      <div class="minibutton-group modal-menu">
+                        <button @click="confirmChildTaskDelete(selectedChildTask.id)" class="minibutton">Подтвердить</button>
+                        <button @click="closeChildTaskDeleteModal" class="minibutton">Отменить</button>
+                      </div>
+                    </div>
+                  </div> 
                 </div>
                 <div v-else >
                   <div class="none-border">Нет подзадач</div>
@@ -460,6 +460,12 @@
                   Создать
                 </router-link>
               </div>
+            </div>
+
+            <div v-if="activeTab === 'messages'" class="topic-tab">
+              
+              <TopicMessages :topic_id="state.object?.topic.id" />
+
             </div>
 
             <div v-if="activeTab === 'accountsGroupObjectPermissions'" class="table-tab">
@@ -504,6 +510,7 @@ import { formatDate, formatDateTime, baseUrl, isTokenValid } from '../utils/util
 import TaskResultUpdate from './TaskResultUpdate.vue';
 import AccountObjectPermissions from '../components/AccountObjectPermissions.vue';
 import AccountsGroupObjectPermissions from '../components/AccountsGroupObjectPermissions.vue'; 
+import TopicMessages from '../components/TopicMessages.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -779,6 +786,7 @@ const back = () => {
 const tabs = computed(() => [
   { name: 'desc', label: 'Описание' },
   { name: 'details', label: 'Детали' },
+  state.object.topic ? { name: 'messages', label: 'Комментарии' } : null,
   state.object.task_type == 'plan_implementation' ? { name: 'child_tasks', label: 'Подзадачи' } : null,
   state.canViewAccountsGroupObjectPermission ? { name: 'accountsGroupObjectPermissions', label: 'Объектные права групп' } : null,
   state.canViewAccountObjectPermission ? { name: 'accountObjectPermissions', label: 'Объектные права аккаунтов' } : null,

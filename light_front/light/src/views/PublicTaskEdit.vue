@@ -79,14 +79,6 @@
           <span v-if="errors.name" class="error">{{ errors.name }}</span>
         </div>
 
-        <div lass="form-field form-field-full_width">
-          <label for="desc" class="form-label">Содержание:</label>
-          
-          <EditorComponent v-model="form.content" />
-
-          <span v-if="errors.content" class="error">{{ errors.content }}</span>
-        </div>
-
         <div class="form-field">
           <label for="desc" class="form-label">Описание:</label>
           <textarea v-model="form.desc" id="desc" class="form-input" rows="3" placeholder="Введите описание" ></textarea>
@@ -129,7 +121,6 @@ const object = ref(null);
 const form = reactive({
   task_template: null,
   name: '',
-  content: '',
   desc: '',
   categories: [],
 });
@@ -172,9 +163,7 @@ const loadTaskTemplate = async () => {
         task_type: 'common_task',
       },
     });
-    task_templates.value = (response.data.results || []).filter(
-      task_template => !task_template.is_child
-    );
+    task_templates.value = response.data.results || [];
     console.log('Шаблоны задач загружены:', task_templates.value);
   } catch (error) {
     console.error('Ошибка при загрузке шаблонов задач:', error.response ? error.response.data : error.message);
@@ -219,7 +208,6 @@ const errors = reactive({});
 const validateForm = () => {
   errors.task_template = form.task_template ? '' : 'Выбор шаблона задачи обязателен!';
   errors.name = form.name ? '' : 'Название обязательно!';
-  errors.content = form.content.trim() ? '' : 'Содержание обязательно!';
   return Object.values(errors).every((err) => !err);
 };
 
@@ -241,7 +229,6 @@ const saveChanges = async () => {
     const jsonData = {
       task_template: form.task_template?.id,
       name: form.name,
-      content: form.content || "",
       desc: form.desc,
       categories: form.categories.map(item => item.id),
     };
@@ -272,7 +259,7 @@ const saveChanges = async () => {
     }
 
     console.log('Изменения сохранены');
-    router.push({ name: 'PublicPlanDetail', params: { id: id } });
+    router.push({ name: 'PublicTaskDetail', params: { id: id } });
   } catch (error) {
     if (error.response && error.response.data) {
       Object.assign(errors, error.response.data);

@@ -24,7 +24,24 @@ class NewBaseSerializer(serializers.ModelSerializer):
     def get_str(self, obj):
         return f"{obj.name} - {obj.created.strftime('%d.%m.%Y %H:%M')}"
 
+class NewResultSerializer(serializers.ModelSerializer):
+    status_display = serializers.SerializerMethodField()
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = NewResult
+        fields = '__all__'
+
+    def get_status_display(self, obj):
+        return obj.get_status_display()
+
+    def get_str(self, obj):
+        return f'{obj.task} - {obj.get_status_display()}'
+
 class LastTaskBaseSerializer(serializers.ModelSerializer):
+    result = serializers.SerializerMethodField()
     str = serializers.SerializerMethodField()
     creator = serializers.StringRelatedField()
     editor = serializers.StringRelatedField()
@@ -33,12 +50,31 @@ class LastTaskBaseSerializer(serializers.ModelSerializer):
         model = Task
         fields = '__all__'
 
+    def get_result(self, obj):
+        if obj.task_type == 'news_reading':
+            result = obj.new_result
+            return NewResultSerializer(result, context=self.context).data
+
     def get_str(self, obj):
         return f'{obj.get_task_type_display()} - {obj.name}'
+
+from comments.models import *
+class TopicBaseSerializer(serializers.ModelSerializer):
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = Topic
+        fields = '__all__'
+
+    def get_str(self, obj):
+        return f"{obj.get_topic_type_display()} - {obj.name}"
 
 class NewSerializer(serializers.ModelSerializer):
     categories = CategoryBaseSerializer(many=True, required=False)
     avatar = serializers.ImageField(required=False)
+    topic = serializers.SerializerMethodField()
     str = serializers.SerializerMethodField()
     last_task = serializers.SerializerMethodField()
     self_assignment_task_template = serializers.SerializerMethodField()
@@ -54,12 +90,18 @@ class NewSerializer(serializers.ModelSerializer):
     def get_str(self, obj):
         return f"{obj.name} - {obj.created.strftime('%d.%m.%Y %H:%M')}"
 
+    def get_topic(self, obj):
+        topic = Topic.objects.filter(
+            new_id=obj.id,
+        ).order_by('-id').first()
+        return TopicBaseSerializer(topic, context=self.context).data if topic else None
+
     def get_last_task(self, obj):
         last_task = Task.objects.filter(
             new_id=obj.id,
             executor=self.context['request'].user,
             new_result__isnull=False,
-        ).exclude(new_result__status__in=['canceled', 'failed']).order_by('-id').first()
+        ).order_by('-id').first()
         return LastTaskBaseSerializer(last_task, context=self.context).data if last_task else None
 
     def get_self_assignment_task_template(self, obj):

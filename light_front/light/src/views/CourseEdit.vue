@@ -11,8 +11,17 @@
       <form @submit.prevent="saveChanges" class="form" id="edit-form">
 
         <div class="form-field">
+          <label for="avatar" class="form-label">Аватар:</label>
+          <input type="file" id="avatar" @change="onAvatarFileChange" class="form-input" />
+          <div v-if="avatar_url" class="avatar-preview">
+            <span class="avatar-preview-text">Текущий аватар:</span>
+            <a :href="avatar_url" target="_blank" class="link" >{{ avatar_url }}</a>
+          </div>
+        </div>
+
+        <div class="form-field">
           <label for="upload_file" class="form-label">Загружаемый курс:</label>
-          <input type="file" id="upload_file" @change="onFileChange" class="form-input" />
+          <input type="file" id="upload_file" @change="onZipFileChange" class="form-input" />
           <div v-if="upload_url" class="upload_file-preview">
             <span class="upload_file-preview-text">Текущий курс:</span>
             <a :href="upload_url" target="_blank" class="link" >{{ upload_url }}</a>
@@ -171,11 +180,21 @@ const fetchObject = async () => {
 
 const uploadFile = ref(null);
 const upload_url = ref(null);
-const onFileChange = (event) => {
+const onZipFileChange = (event) => {
   const file = event.target.files[0];
   if (file) {
     uploadFile.value = file;
     upload_url.value = URL.createObjectURL(file);
+  }
+};
+
+const avatarFile = ref(null);
+const avatar_url = ref(null);
+const onAvatarFileChange = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    avatarFile.value = file;
+    avatar_url.value = URL.createObjectURL(file);
   }
 };
 
@@ -219,7 +238,7 @@ const saveChanges = async () => {
     if (uploadFile.value) {
       const fileFormData = new FormData();
       fileFormData.append('upload_file', uploadFile.value);
-      const filePatchUrl = `${baseUrl}/files/${id}/`;
+      const filePatchUrl = `${baseUrl}/courses/${id}/`;
       await axios.patch(filePatchUrl, fileFormData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -228,6 +247,20 @@ const saveChanges = async () => {
       });
 
       console.log('Файл успешно обновлен');
+    }
+
+    if (avatarFile.value) {
+      const avatarFormData = new FormData();
+      avatarFormData.append('avatar', avatarFile.value);
+      const avatarPatchUrl = `${baseUrl}/courses/${id}/`;
+      await axios.patch(avatarPatchUrl, avatarFormData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log('Аватар успешно обновлен');
     }
 
     console.log('Изменения сохранены');

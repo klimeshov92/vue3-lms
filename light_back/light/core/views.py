@@ -285,7 +285,11 @@ def users_permissions(request):
                         })
 
             for p in direct_object_perms:
-                obj_instance = p.permission.content_type.model_class().objects.get(pk=p.object_pk)
+                model_cls = p.permission.content_type.model_class()
+                obj_instance = model_cls.objects.filter(pk=p.object_pk).first()
+                if not obj_instance:
+                    continue
+                #obj_instance = p.permission.content_type.model_class().objects.get(pk=p.object_pk)
                 data.append({
                     "user": {"id": user.id, "username": user.username, "is_superuser": user.is_superuser},
                     "type": "object_direct",
@@ -300,7 +304,11 @@ def users_permissions(request):
                 })
 
             for p in group_object_perms:
-                obj_instance = p.permission.content_type.model_class().objects.get(pk=p.object_pk)
+                model_cls = p.permission.content_type.model_class()
+                obj_instance = model_cls.objects.filter(pk=p.object_pk).first()
+                if not obj_instance:
+                    continue
+                #obj_instance = p.permission.content_type.model_class().objects.get(pk=p.object_pk)
                 data.append({
                     "user": {"id": user.id, "username": user.username, "is_superuser": user.is_superuser},
                     "type": "object_group",

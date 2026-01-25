@@ -20,13 +20,11 @@ class ChatBaseSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_str(self, obj):
-        return f"{obj.get_chat_type_display()} - {obj.name}"
+        return f"{obj.name}"
 
 
 class ChatSerializer(serializers.ModelSerializer):
-    chat_type_display = serializers.SerializerMethodField()
-    task = TaskBaseSerializer(required=False)
-    queue = QueueBaseSerializer(required=False)
+    categories = CategoryBaseSerializer(many=True, required=False)
     str = serializers.SerializerMethodField()
     accounts_group_object_permissions = serializers.SerializerMethodField()
     account_object_permissions = serializers.SerializerMethodField()
@@ -42,7 +40,7 @@ class ChatSerializer(serializers.ModelSerializer):
         return obj.get_chat_type_display()
 
     def get_str(self, obj):
-        return f"{obj.get_chat_type_display()} - {obj.name}"
+        return f"{obj.name}"
 
     def get_accounts_group_object_permissions(self, obj):
         content_type = ContentType.objects.get_for_model(obj.__class__)
@@ -61,8 +59,6 @@ class ChatSerializer(serializers.ModelSerializer):
         return AccountObjectPermissionBaseSerializer(permissions, many=True, context=self.context).data
 
 class ChatEditSerializer(serializers.ModelSerializer):
-    task = serializers.PrimaryKeyRelatedField(queryset=Task.objects.all(), required=False)
-    queue = serializers.PrimaryKeyRelatedField(queryset=Queue.objects.all(), required=False)
     categories = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), many=True, required=False)
 
     class Meta:

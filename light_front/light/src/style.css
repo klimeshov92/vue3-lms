@@ -1499,7 +1499,7 @@ textarea.form-input:disabled,
 }
 
 .list-card-header {
-  margin-top: 20px;
+  margin-top: 16px;
   padding: 0px 16px;
   display: flex;
   flex-direction: column;
@@ -1679,7 +1679,7 @@ textarea.form-input:disabled,
 }
 
 .testing {
-  padding: 16px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1697,6 +1697,7 @@ textarea.form-input:disabled,
   display: flex;
   flex-direction: column;
   gap: 16px;
+
 }
 
 .test-header {
@@ -1774,13 +1775,14 @@ textarea.form-input:disabled,
   background-color: white;
   border-radius: 12px;
   border: 1px solid var(--color-grey-medium-light);
+  background-color: var(--color-grey-light);
 }
 
 .answer-image-outer {
   display: flex;           
   justify-content: center;
   align-items: center;
-  background-color: var(--color-grey-light);
+  background-color: white;
   border: 1px solid var(--color-grey-medium-light);
   border-radius: 12px;
   overflow: hidden;
@@ -1996,8 +1998,8 @@ textarea.answer-input:disabled,
   align-items: flex-start;
   gap: 8px;
   flex-wrap: wrap;
-  margin-top: 16px;
-  margin-bottom: 16px;
+  /*margin-top: auto;*/
+  padding: 16px 0;
 }
 
 .test-nav-button {
@@ -2013,16 +2015,22 @@ textarea.answer-input:disabled,
   line-height: 1.5;
   font-weight: 400;
   font-size: 20px;
-  padding: 8px 16px;
+  padding: 8px 24px;
+  border: 2px solid var(--color-grey-medium-light);
+  border-radius: 8px;
 }
 
 .test-nav-button:hover,
 .test-nav-button:focus {
   color: var(--color-grey-dark);
+  border: 2px solid var(--color-grey-medium-light);
+  background-color: var(--color-grey-light);
 }
 
 .test-nav-button:disabled {
   pointer-events: none;
+  color: var(--color-grey-medium-light);
+  border: 2px solid var(--color-grey-light);
 }
 
 .test-info-area {
@@ -2939,6 +2947,10 @@ textarea.answer-input:disabled,
   text-align: center;
 }
 
+.none-border-container {
+  padding: 0 16px;
+}
+
 .none-border-mini {
   padding: 8px 12px;
   background-color: white;
@@ -2948,6 +2960,7 @@ textarea.answer-input:disabled,
   border: 1px solid var(--color-grey-medium-light); /* Граница вокруг всей таблицы */
   text-align: center;
 }
+
 
 .loading {
   padding: 16px;

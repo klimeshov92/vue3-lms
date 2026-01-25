@@ -110,7 +110,7 @@ const newReview = async () => {
       }
     });
     console.log('Результат ознакомления:', response.data);
-    await fetchObject();
+    state.canCompleted = false;
   } catch (error) {
     console.error('Ошибка при получении данных результата:', error);
   }
@@ -167,7 +167,7 @@ const loadUserPermissions = async () => {
       state.object.status !=  'completed' && state.object.status !=  'failed' && state.object.status !=  'canceled'
     ) {
       state.canCompleted = state.object.task.executor == validToken.user_id
-    }
+    } 
     console.log('Редактирование результата:', state.canCompleted);
 
   } catch (error) {

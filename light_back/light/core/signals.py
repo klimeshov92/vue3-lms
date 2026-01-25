@@ -20,6 +20,7 @@ from django.utils.crypto import get_random_string
 from datetime import datetime, timedelta
 from datetime import date
 from notifications.models import NotificationSettings
+from django.contrib.contenttypes.models import ContentType
 
 # Импортируем логи.
 import logging
@@ -301,16 +302,56 @@ def update_groups_users(sender, instance, **kwargs):
         if settings.DEBUG:
             raise
 
-@receiver(post_delete, sender=Account)
-def delete_account_object_permissions(sender, instance, **kwargs):
-    if AccountObjectPermission.objects.filter(user=instance).exists():
-        perms = AccountObjectPermission.objects.filter(user=instance).all()
-        perms.delete()
-    logger.info('Удалены все объектные права, связанные с удаленным пользователем')
+@receiver(post_delete)
+def cleanup_object_permissions_for_instance(sender, instance, **kwargs):
 
-@receiver(post_delete, sender=AccountsGroup)
-def delete_group_object_permissions(sender, instance, **kwargs):
-    if AccountsGroupObjectPermission.objects.filter(group=instance).exists():
-        perms = AccountsGroupObjectPermission.objects.filter(group=instance).all()
-        perms.delete()
-    logger.info('Удалены все объектные права, связанные с удаленной группой')
+    # Не трогаем системные приложения.
+    if sender._meta.app_label in (
+        'auth',
+        'contenttypes',
+        'admin',
+        'sessions',
+    ):
+        return
+
+    # Не трогаем сами object-permissions (иначе рекурсия).
+    if sender.__name__ in (
+        'UserObjectPermission',
+        'GroupObjectPermission',
+        'AccountObjectPermission',
+        'AccountsGroupObjectPermission',
+    ):
+        return
+
+    logger.debug(
+        f'Удаление объектных прав: '
+        f'{sender._meta.app_label}.{sender.__name__} (pk={instance.pk})'
+    )
+
+    content_type = ContentType.objects.get_for_model(
+        instance,
+        for_concrete_model=False
+    )
+    object_pk = str(instance.pk)
+
+    user_deleted, _ = AccountObjectPermission.objects.filter(
+        content_type=content_type,
+        object_pk=object_pk
+    ).delete()
+
+    group_deleted, _ = AccountsGroupObjectPermission.objects.filter(
+        content_type=content_type,
+        object_pk=object_pk
+    ).delete()
+
+    if user_deleted or group_deleted:
+        logger.debug(
+            f'Удалено:'
+            f'Права пользователей={user_deleted}, '
+            f'Права групп={group_deleted}'
+        )
+    else:
+        logger.debug(
+            f'Нет объектных прав'
+        )
+

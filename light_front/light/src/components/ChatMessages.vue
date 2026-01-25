@@ -151,7 +151,8 @@ const connectWebSocket = () => {
     console.log('ID пользователя:', user_id.value);
   }
 
-  const wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/chat_rooms/${roomName}/?token=${token}`;// URL WebSocket
+  //const wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/chat_rooms/${roomName}/?token=${token}`;// URL WebSocket
+  const wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://127.0.0.1:8001/ws/chat_rooms/${roomName}/?token=${token}`;// URL WebSocket
 
   socket = new WebSocket(wsUrl); // Подключаем WebSocket
 

@@ -5,6 +5,14 @@ from django.db import models
 from django.db import models
 from core.models import *
 from bpms.models import *
+from news.models import *
+from materials.models import *
+from courses.models import *
+from tests.models import *
+from events.models import *
+
+
+
 
 # Create your models here.
 
@@ -13,6 +21,14 @@ class Topic(models.Model):
         ('common_topic', 'Обычный топик'),
         ('task_topic', 'Топик задачи'),
         ('queue_topic', 'Топик очереди'),
+        ('public_plan_topic', 'Топик плана'),
+        ('public_task_topic', 'Топик задания'),
+        ('new_topic', 'Топик новости'),
+        ('material_topic', 'Топик материала'),
+        ('course_topic', 'Топик курса'),
+        ('test_topic', 'Топик теста'),
+        ('event_template_topic', 'Топик мероприятия'),
+        ('event_slot_topic', 'Топик слота мероприятия'),
     ]
     topic_type = models.CharField('Тип топика', max_length=20, choices=TOPICS_TYPES, null=True, blank=True)
     task = models.ForeignKey(
@@ -29,6 +45,78 @@ class Topic(models.Model):
         related_name='topics',
         related_query_name='topic',
         verbose_name='Очередь',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    public_plan = models.ForeignKey(
+        PublicPlan,
+        related_name='topics',
+        related_query_name='topic',
+        verbose_name='План',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    public_task = models.ForeignKey(
+        PublicTask,
+        related_name='topics',
+        related_query_name='topic',
+        verbose_name='Задание',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    new = models.ForeignKey(
+        New,
+        related_name='topics',
+        related_query_name='topic',
+        verbose_name='Новость',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    material = models.ForeignKey(
+        Material,
+        related_name='topics',
+        related_query_name='topic',
+        verbose_name='Материал',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    course = models.ForeignKey(
+        Course,
+        related_name='topics',
+        related_query_name='topic',
+        verbose_name='Курс',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    test = models.ForeignKey(
+        Test,
+        related_name='topics',
+        related_query_name='topic',
+        verbose_name='Тест',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    event_template = models.ForeignKey(
+        EventTemplate,
+        related_name='topics',
+        related_query_name='topic',
+        verbose_name='Шаблон мероприятия',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    event_slot = models.ForeignKey(
+        EventSlot,
+        related_name='topics',
+        related_query_name='topic',
+        verbose_name='Слот мероприятия',
         null=True,
         blank=True,
         on_delete=models.CASCADE

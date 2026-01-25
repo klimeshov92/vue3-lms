@@ -2,8 +2,15 @@
   <div v-if="loading">
     <div v-if="state.canViewCourse" class="detail-page">
       <div v-if="state.object.id">
-        <div class="detail-card"> 
-
+        <div class="detail-card">
+          <div class="detail-card-image-outer">
+            <div v-if="state.object.avatar" class="detail-card-image-inner">
+              <img :src="state.object.avatar || '/default-avatar.png'" alt="Аватар" />
+            </div>
+            <div v-else class="detail-card-image-none">
+              <span class="none-text">Нет аватара</span>
+            </div>
+          </div> 
           <div class="detail-card-info">
             <div class="detail-header"> 
               <div class="detail-header-title">
@@ -11,6 +18,9 @@
               </div>
             </div>
             <div class="detail-card-text">
+              <div class="detail-card-text-elem">
+                <span class="detail-card-text-label">Статус задачи:</span> {{ state.object.last_task?.result ? state.object.last_task?.result.status_display : 'Не назначено' }}
+              </div>
               <div class="detail-card-text-elem">
                 <span class="detail-card-text-label">Тип курса:</span> {{ state.object.constructor_type_display || 'Нет типа курса' }}
               </div>
@@ -40,7 +50,7 @@
               </router-link>
 
               <button 
-                v-if="state.canSelfAssignment && !state.object.last_task" 
+                v-if="state.canSelfAssignment"
                 @click="selfAssignment(state.object.self_assignment_task_template)"
                 class="button"
               >
@@ -113,6 +123,9 @@
 
           <div v-if="activeTab === 'details'" class="detail-tab">
             <div class="detail-tab-elem">
+              <span class="detail-tab-label">Статус задачи:</span> {{ state.object.last_task?.result ? state.object.last_task?.result.status_display : 'Не назначено' }}
+            </div>
+            <div class="detail-tab-elem">
               <span class="detail-tab-label">Тип курса:</span> {{ state.object.constructor_type_display || 'Нет типа курса' }}
             </div>
             <div class="detail-tab-elem">
@@ -131,6 +144,12 @@
             <div class="detail-tab-elem">
               <span class="detail-tab-label">Редактор:</span> {{ state.object.editor ? state.object.editor : 'Нет редактора' }}
             </div>
+          </div>
+
+          <div v-if="activeTab === 'messages'" class="topic-tab">
+            
+            <TopicMessages :topic_id="state.object?.topic.id" />
+
           </div>
 
           <div v-if="activeTab === 'accountsGroupObjectPermissions'" class="table-tab">
@@ -174,6 +193,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { formatDate, formatDateTime, baseUrl, isTokenValid } from '../utils/utils';
 import AccountObjectPermissions from '../components/AccountObjectPermissions.vue';
 import AccountsGroupObjectPermissions from '../components/AccountsGroupObjectPermissions.vue'; 
+import TopicMessages from '../components/TopicMessages.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -373,7 +393,9 @@ const loadUserPermissions = async () => {
       state.objectPermissionsDict['courses.view_course'].includes(Number(id)));
     console.log('Права на просмотр курсов:', state.canViewCourse);
 
-    state.canSelfAssignment = state.canViewCourse && state.object.self_assignment_task_template
+    state.canSelfAssignment = state.canViewCourse && 
+    state.object.self_assignment_task_template && state.object.self_assignment_task_template && 
+    (!state.object.last_task || (state.object.last_task?.result?.status == 'failed' || state.object.last_task?.result?.status == 'canceled'))
     console.log('Права на самоназначение:', state.canSelfAssignment);
 
     state.canEditCourse = state.globalPermissionsList.includes('courses.change_course') ||
@@ -416,6 +438,7 @@ const back = () => {
 const tabs = computed(() => [
   { name: 'desc', label: 'Описание' },
   { name: 'details', label: 'Детали' },
+  state.object.topic ? { name: 'messages', label: 'Комментарии' } : null,
   state.canViewAccountsGroupObjectPermission ? { name: 'accountsGroupObjectPermissions', label: 'Объектные права групп' } : null,
   state.canViewAccountObjectPermission ? { name: 'accountObjectPermissions', label: 'Объектные права аккаунтов' } : null,
 ].filter(Boolean));

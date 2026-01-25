@@ -24,7 +24,24 @@ class CourseBaseSerializer(serializers.ModelSerializer):
     def get_str(self, obj):
         return f"{obj.name}"
 
+class CourseResultSerializer(serializers.ModelSerializer):
+    status_display = serializers.SerializerMethodField()
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = CourseResult
+        fields = '__all__'
+
+    def get_status_display(self, obj):
+        return obj.get_status_display()
+
+    def get_str(self, obj):
+        return f'{obj.task} - {obj.get_status_display()}'
+
 class LastTaskBaseSerializer(serializers.ModelSerializer):
+    result = serializers.SerializerMethodField()
     str = serializers.SerializerMethodField()
     creator = serializers.StringRelatedField()
     editor = serializers.StringRelatedField()
@@ -33,13 +50,31 @@ class LastTaskBaseSerializer(serializers.ModelSerializer):
         model = Task
         fields = '__all__'
 
+    def get_result(self, obj):
+        if obj.task_type == 'course_study':
+            result = obj.course_result
+            return CourseResultSerializer(result, context=self.context).data
+
     def get_str(self, obj):
         return f'{obj.get_task_type_display()} - {obj.name}'
 
+from comments.models import *
+class TopicBaseSerializer(serializers.ModelSerializer):
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = Topic
+        fields = '__all__'
+
+    def get_str(self, obj):
+        return f"{obj.get_topic_type_display()} - {obj.name}"
 
 class CourseSerializer(serializers.ModelSerializer):
     constructor_type_display = serializers.SerializerMethodField()
     categories = CategoryBaseSerializer(many=True, required=False)
+    topic = serializers.SerializerMethodField()
     avatar = serializers.ImageField(required=False)
     upload_file = serializers.FileField(required=False)
     str = serializers.SerializerMethodField()
@@ -60,12 +95,18 @@ class CourseSerializer(serializers.ModelSerializer):
     def get_str(self, obj):
         return f"{obj.name}"
 
+    def get_topic(self, obj):
+        topic = Topic.objects.filter(
+            course_id=obj.id,
+        ).order_by('-id').first()
+        return TopicBaseSerializer(topic, context=self.context).data if topic else None
+
     def get_last_task(self, obj):
         last_task = Task.objects.filter(
             course_id=obj.id,
             executor=self.context['request'].user,
             course_result__isnull=False,
-        ).exclude(course_result__status__in=['canceled', 'failed']).order_by('-id').first()
+        ).order_by('-id').first()
         return LastTaskBaseSerializer(last_task, context=self.context).data if last_task else None
 
     def get_self_assignment_task_template(self, obj):

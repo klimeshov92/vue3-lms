@@ -103,6 +103,57 @@
               </div>
             </div>
 
+            <div class="list-card-icons">
+              <div v-if="item.last_task?.result?.status == 'waiting'" class="list-card-icon-grey">
+                <span class="list-card-icon">
+                  <i class="fa-solid fa-lock"></i>
+                </span>
+                В ожидании
+              </div>
+              <div v-else-if="item.last_task?.result?.status == 'assigned'" class="list-card-icon-progress">
+                <span class="list-card-icon">
+                  <i class="fa-solid fa-thumbtack"></i>
+                </span>
+                Назначено
+              </div>
+              <div v-else-if="item.last_task?.result?.status == 'in_progress'" class="list-card-icon-progress">
+                <span class="list-card-icon">
+                  <i class="fa-solid fa-hourglass-half"></i>
+                </span>
+                В процессе
+              </div>
+              <div v-else-if="item.last_task?.result?.status == 'under_review'" class="list-card-icon-progress">
+                <span class="list-card-icon">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                На проверке
+              </div>
+              <div v-else-if="item.last_task?.result?.status == 'completed'" class="list-card-icon-completed">
+                <span class="list-card-icon">
+                  <i class="fa-solid fa-circle-check"></i>
+                </span>
+                 Выполнено
+              </div>
+              <div v-else-if="item.last_task?.result?.status == 'failed'" class="list-card-icon-attention">
+                <span class="list-card-icon">
+                  <i class="fa-solid fa-circle-xmark"></i>
+                </span>
+                Провалено
+              </div>
+              <div v-else-if="item.last_task?.result?.status == 'canceled'" class="list-card-icon-grey">
+                <span class="list-card-icon">
+                  <i class="fa-solid fa-ban"></i>
+                </span>
+                Отменено
+              </div>
+              <div v-else-if="!item.last_task" class="list-card-icon-grey">
+                <span class="list-card-icon">
+                  <i class="fa-solid fa-ban"></i>
+                </span>
+                Не назначено
+              </div>
+            </div>
+
             <div class="list-card-header">
               <div class="list-card-header-title">
                 <h2>{{ item.str || 'Нет названия' }}</h2>

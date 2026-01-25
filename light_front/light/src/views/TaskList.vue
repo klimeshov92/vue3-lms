@@ -95,12 +95,6 @@
 
           <div v-for="item in state.items" :key="item.id" class="list-card">
 
-            <div class="list-card-header">
-              <div class="list-card-header-title">
-                <h2>{{ item.plan ? item.plan.name + ' - ' : '' }}{{ item.item ? item.item  + ' - ' : ''  }}{{ item.name || 'Нет названия' }}</h2>
-              </div>
-            </div>
-
             <div class="list-card-icons">
               <div v-if="item.result?.status == 'waiting'" class="list-card-icon-grey">
                 <span class="list-card-icon">
@@ -143,6 +137,12 @@
                   <i class="fa-solid fa-ban"></i>
                 </span>
                 Отменено
+              </div>
+            </div>
+
+            <div class="list-card-header">
+              <div class="list-card-header-title">
+                <h2>{{ item.plan ? item.plan.name + ' - ' : '' }}{{ item.item ? item.item  + ' - ' : ''  }}{{ item.name || 'Нет названия' }}</h2>
               </div>
             </div>
 

@@ -163,3 +163,27 @@ def event_slot_select(request, task_id):
     except Exception as e:
         logger.exception(f"Ошибка при выборе слота мероприятия в задаче ID={task_id}")
         return Response({"error": "Ошибка сервера", "details": str(e)}, status=500)
+
+@api_view(['PATCH'])
+@permission_classes([AllowAny])
+def mark_completion(request, task_id, status):
+    try:
+
+        task = get_object_or_404(Task, pk=task_id)
+        result = task.event_result
+
+        if not task.event_slot:
+            return Response({"error": "Нет слота для подтверждения участия"}, status=403)
+
+        executor = result.task.executor == request.user
+        if not (executor):
+            return Response({"error": "Нет прав на результат задачи"}, status=403)
+
+
+        result.status = status
+        result.save()
+        return Response({"status": result.status},status=200)
+
+    except Exception as e:
+        logger.exception(f"Ошибка при отметке выполнения по задаче ID={task_id}")
+        return Response({"error": "Ошибка сервера", "details": str(e)}, status=500)

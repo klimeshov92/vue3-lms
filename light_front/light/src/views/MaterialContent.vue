@@ -110,7 +110,7 @@ const materialReview = async () => {
       }
     });
     console.log('Результат ознакомления:', response.data);
-    await fetchObject();
+    state.canCompleted = false;
   } catch (error) {
     console.error('Ошибка при получении данных результата:', error);
   }

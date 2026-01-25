@@ -239,18 +239,7 @@
                                   class="table-tab-button"
                                 >
                                   Удалить
-                                </button>
-                                <div v-if="showChildTaskTemplateDeleteModal" class="modal-overlay">
-                                  <div class="modal">
-                                    <div class="modal-header">
-                                      <h2 class="modal-header-h2">Удаление {{ selectedChildTaskTemplate.str || 'Безымянная подзадача' }}</h2>
-                                    </div>
-                                    <div class="minibutton-group modal-menu">
-                                      <button @click="confirmChildTaskTemplateDelete(selectedChildTaskTemplate.id)" class="minibutton">Подтвердить</button>
-                                      <button @click="closeChildTaskTemplateDeleteModal" class="minibutton">Отменить</button>
-                                    </div>
-                                  </div>
-                                </div>                            
+                                </button>                         
                               </div>
                             </div>
                             <div v-else> 
@@ -261,6 +250,17 @@
                       </tbody>
                     </table>
                   </div>
+                  <div v-if="showChildTaskTemplateDeleteModal" class="modal-overlay">
+                    <div class="modal">
+                      <div class="modal-header">
+                        <h2 class="modal-header-h2">Удаление {{ selectedChildTaskTemplate.str || 'Безымянная подзадача' }}</h2>
+                      </div>
+                      <div class="minibutton-group modal-menu">
+                        <button @click="confirmChildTaskTemplateDelete(selectedChildTaskTemplate.id)" class="minibutton">Подтвердить</button>
+                        <button @click="closeChildTaskTemplateDeleteModal" class="minibutton">Отменить</button>
+                      </div>
+                    </div>
+                  </div>   
                 </div>
                 <div v-else >
                   <div class="none-border">Нет подзадач</div>

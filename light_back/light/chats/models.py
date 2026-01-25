@@ -5,30 +5,6 @@ from bpms.models import *
 # Create your models here.
 
 class Chat(models.Model):
-    CHATS_TYPES = [
-        ('common_chat', 'Обычный чат'),
-        ('task_chat', 'Чат задачи'),
-        ('queue_chat', 'Чат очереди'),
-    ]
-    chat_type = models.CharField('Тип чата', max_length=20, choices=CHATS_TYPES, null=True, blank=True)
-    task = models.ForeignKey(
-        Task,
-        related_name='chats',
-        related_query_name='chat',
-        verbose_name='Задача',
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE
-    )
-    queue = models.ForeignKey(
-        Queue,
-        related_name='chats',
-        related_query_name='chat',
-        verbose_name='Очередь',
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE
-    )
     categories = models.ManyToManyField(
         Category,
         verbose_name='Категории',
@@ -72,7 +48,7 @@ class Chat(models.Model):
 
 
     def __str__(self):
-        return f"{self.get_chat_type_display()} - {self.name}"
+        return f"{self.name}"
 
 class Message(models.Model):
     chat = models.ForeignKey(

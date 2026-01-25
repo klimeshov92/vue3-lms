@@ -32,9 +32,9 @@ class TopicViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'create':
-            return TopicSerializer
+            return TopicEditSerializer
         elif self.action == 'partial_update':
-            return TopicSerializer
+            return TopicEditSerializer
         return TopicSerializer
 
     def get_queryset(self):

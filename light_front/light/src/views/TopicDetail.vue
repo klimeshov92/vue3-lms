@@ -14,6 +14,30 @@
               <div v-if="state.object.topic_type == 'queue_topic'" class="detail-header-title">
                 <h1>{{ state.object.queue?.str || 'Безымянный топик' }}</h1>
               </div>
+              <div v-if="state.object.topic_type == 'public_plan_topic'" class="detail-header-title">
+                <h1>{{ state.object.public_plan?.str || 'Безымянный топик' }}</h1>
+              </div>
+              <div v-if="state.object.topic_type == 'public_task_topic'" class="detail-header-title">
+                <h1>{{ state.object.public_task?.str || 'Безымянный топик' }}</h1>
+              </div>
+              <div v-if="state.object.topic_type == 'new_topic'" class="detail-header-title">
+                <h1>{{ state.object.new?.str || 'Безымянный топик' }}</h1>
+              </div>
+              <div v-if="state.object.topic_type == 'material_topic'" class="detail-header-title">
+                <h1>{{ state.object.material?.str || 'Безымянный топик' }}</h1>
+              </div>
+              <div v-if="state.object.topic_type == 'course_topic'" class="detail-header-title">
+                <h1>{{ state.object.course?.str || 'Безымянный топик' }}</h1>
+              </div>
+              <div v-if="state.object.topic_type == 'test_topic'" class="detail-header-title">
+                <h1>{{ state.object.test?.str || 'Безымянный топик' }}</h1>
+              </div>
+              <div v-if="state.object.topic_type == 'event_template_topic'" class="detail-header-title">
+                <h1>{{ state.object.event_template?.str || 'Безымянный топик' }}</h1>
+              </div>
+              <div v-if="state.object.topic_type == 'event_slot_topic'" class="detail-header-title">
+                <h1>{{ state.object.event_slot?.str || 'Безымянный топик' }}</h1>
+              </div>
             </div>
             <div class="detail-card-text">
               <div class="detail-card-text-elem">
@@ -24,6 +48,30 @@
               </div>
               <div v-if="state.object.topic_type == 'queue_topic'" class="detail-card-text-elem">
                 <span class="detail-card-text-label">Очередь:</span> {{ state.object.queue ? state.object.queue.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'public_plan_topic'" class="detail-card-text-elem">
+                <span class="detail-card-text-label">План:</span> {{ state.object.public_plan ? state.object.public_plan.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'public_task_topic'" class="detail-card-text-elem">
+                <span class="detail-card-text-label">Задание:</span> {{ state.object.public_task ? state.object.public_task.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'new_topic'" class="detail-card-text-elem">
+                <span class="detail-card-text-label">Новость:</span> {{ state.object.new ? state.object.new.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'material_topic'" class="detail-card-text-elem">
+                <span class="detail-card-text-label">Материал:</span> {{ state.object.material ? state.object.material.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'course_topic'" class="detail-card-text-elem">
+                <span class="detail-card-text-label">Курс:</span> {{ state.object.course ? state.object.course.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'test_topic'" class="detail-card-text-elem">
+                <span class="detail-card-text-label">Тест:</span> {{ state.object.test ? state.object.test.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'event_template_topic'" class="detail-card-text-elem">
+                <span class="detail-card-text-label">Мероприятия:</span> {{ state.object.event_template ? state.object.event_template.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'event_slot_topic'" class="detail-card-text-elem">
+                <span class="detail-card-text-label">Слот мероприятия:</span> {{ state.object.event_slot ? state.object.event_slot.str : 'Нет очереди' }}
               </div>
               <div class="detail-card-text-elem">
                 <span class="detail-card-text-label">Категории:</span>
@@ -95,6 +143,30 @@
               </div>
               <div v-if="state.object.topic_type == 'queue_topic'" class="detail-tab-elem">
                 <span class="detail-tab-label">Очередь:</span> {{ state.object.queue ? state.object.queue.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'public_plan_topic'" class="detail-tab-elem">
+                <span class="detail-tab-label">План:</span> {{ state.object.public_plan ? state.object.public_plan.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'public_task_topic'" class="detail-tab-elem">
+                <span class="detail-tab-label">Задание:</span> {{ state.object.public_task ? state.object.public_task.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'new_topic'" class="detail-tab-elem">
+                <span class="detail-tab-label">Новость:</span> {{ state.object.new ? state.object.new.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'material_topic'" class="detail-tab-elem">
+                <span class="detail-tab-label">Материал:</span> {{ state.object.material ? state.object.material.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'course_topic'" class="detail-tab-elem">
+                <span class="detail-tab-label">Курс:</span> {{ state.object.course ? state.object.course.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'test_topic'" class="detail-tab-elem">
+                <span class="detail-tab-label">Тест:</span> {{ state.object.test ? state.object.test.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'event_template_topic'" class="detail-tab-elem">
+                <span class="detail-tab-label">Мероприятия:</span> {{ state.object.event_template ? state.object.event_template.str : 'Нет очереди' }}
+              </div>
+              <div v-if="state.object.topic_type == 'event_slot_topic'" class="detail-tab-elem">
+                <span class="detail-tab-label">Слот мероприятия:</span> {{ state.object.event_slot ? state.object.event_slot.str : 'Нет очереди' }}
               </div>
               <div class="detail-tab-elem">
                 <span class="detail-tab-label">Категории:</span>

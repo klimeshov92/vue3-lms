@@ -182,11 +182,11 @@
               <div class="test-section-tab-item-detail">
                 
                 <div class="test-section-tab-item-detail-elem">
-                  <span class="test-section-tab-item-detail-label">Всего:</span>  {{ state.results.tasks_started ? state.results.tasks_started : 'Нет данных' }}
+                  <span class="test-section-tab-item-detail-label">Всего:</span>  {{ state.results ? state.results.tasks_started : 'Нет данных' }}
                 </div>
 
                 <div class="test-section-tab-item-detail-elem">
-                  <span class="test-section-tab-item-detail-label">Завершено:</span>  {{ state.results.tasks_finished ? state.results.tasks_finished : 'Нет данных' }}
+                  <span class="test-section-tab-item-detail-label">Завершено:</span>  {{ state.results ? state.results.tasks_finished : 'Нет данных' }}
                 </div>
 
               </div>
@@ -259,13 +259,17 @@
 
               </div>
 
-              <div class="test-section-tab-item-detail">
+              <div v-if="state.results.outcomes && state.results.outcomes.length > 0" class="test-section-tab-item-detail">
                 
                 <div v-for="outcome in state.results.outcomes" :key="outcome.id" class="test-section-tab-item-detail-elem">
                   <span class="test-section-tab-item-detail-label">{{ outcome.name ? outcome.name : 'Нет данных' }}:</span> {{ outcome.count ? outcome.count : 'Нет данных' }}
                 </div>
 
               </div>
+              <div v-else class="none-border-container">
+                <div class="none-border-mini">Нет итогов задач </div>
+              </div>
+
 
               <div class="test-section-tab-item-menu-outer">
                 <!--<div class="test-section-tab-item-menu-inner">

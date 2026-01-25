@@ -5,6 +5,11 @@ from core.models import *
 from core.serializers import *
 from bpms.models import *
 from bpms.serializers import *
+from news.serializers import *
+from materials.serializers import *
+from courses.serializers import *
+from tests.serializers import *
+from events.serializers import *
 from django.conf import settings
 
 import logging
@@ -27,6 +32,15 @@ class TopicSerializer(serializers.ModelSerializer):
     topic_type_display = serializers.SerializerMethodField()
     task = TaskBaseSerializer(required=False)
     queue = QueueBaseSerializer(required=False)
+    public_plan = PublicPlanSerializer(required=False)
+    public_task = PublicTaskSerializer(required=False)
+    new = NewSerializer(required=False)
+    material = MaterialSerializer(required=False)
+    course = CourseSerializer(required=False)
+    test = TestSerializer(required=False)
+    event_template = EventTemplateSerializer(required=False)
+    event_slot = EventSlotSerializer(required=False)
+    categories = CategoryBaseSerializer(many=True, required=False)
     str = serializers.SerializerMethodField()
     accounts_group_object_permissions = serializers.SerializerMethodField()
     account_object_permissions = serializers.SerializerMethodField()

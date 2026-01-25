@@ -210,6 +210,12 @@
               </div>
             </div>
 
+            <div v-if="activeTab === 'messages'" class="topic-tab">
+              
+              <TopicMessages :topic_id="state.object?.topic.id" />
+
+            </div>
+
             <div v-if="activeTab === 'accountsGroupObjectPermissions'" class="table-tab">
 
               <AccountsGroupObjectPermissions :state="state" :fetchObject="fetchObject" :contentTypeModel="'queue'" />
@@ -251,6 +257,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { formatDate, formatDateTime, baseUrl, isTokenValid } from '../utils/utils';
 import AccountObjectPermissions from '../components/AccountObjectPermissions.vue';
 import AccountsGroupObjectPermissions from '../components/AccountsGroupObjectPermissions.vue'; 
+import TopicMessages from '../components/TopicMessages.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -464,6 +471,7 @@ const tabs = computed(() => [
   { name: 'desc', label: 'Описание' },
   { name: 'queue_executors', label: 'Исполнители очереди' },
   { name: 'queue_tasks', label: 'Задачи очереди' },
+  state.object.topic ? { name: 'messages', label: 'Комментарии' } : null,
   state.canViewAccountsGroupObjectPermission ? { name: 'accountsGroupObjectPermissions', label: 'Объектные права групп' } : null,
   state.canViewAccountObjectPermission ? { name: 'accountObjectPermissions', label: 'Объектные права аккаунтов' } : null,
 ].filter(Boolean));
