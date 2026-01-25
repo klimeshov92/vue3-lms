@@ -282,6 +282,8 @@ const createObject = async () => {
 
     console.log('Объект создан:', jsonResponse.data);
 
+    localStorage.removeItem('userPermissions');
+
     if (form.content_type.model === 'interaction') {
       const interactionId = form.object_pk;
       router.push({ name: 'InteractionDetail', params: { id: interactionId }  });

@@ -324,6 +324,8 @@ const createObject = async () => {
     });
 
     console.log('Объект создан:', jsonResponse.data);
+
+    localStorage.removeItem('userPermissions');
     router.push({ name: 'AccountGroupDetail', params: { id: groupId }  });
   } catch (error) {
     if (error.response && error.response.data) {

@@ -230,6 +230,8 @@ const createObject = async () => {
       console.log('Картинка успешно обновлена:', picturePatchResponse.data);
     }
 
+    localStorage.removeItem('userPermissions');
+
     router.push({ name: 'QuestionDetail', params: { id: jsonResponse.data.id }  });
   } catch (error) {
     if (error.response && error.response.data) {

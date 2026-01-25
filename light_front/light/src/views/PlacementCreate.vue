@@ -228,6 +228,9 @@ const createObject = async () => {
     });
 
     console.log('Объект создан:', jsonResponse.data);
+
+  localStorage.removeItem('userPermissions');
+
     router.push({ name: 'AccountDetail', params: { id: accountId }  });
   } catch (error) {
     if (error.response && error.response.data) {

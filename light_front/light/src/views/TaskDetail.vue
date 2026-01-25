@@ -701,7 +701,10 @@ const loadUserPermissions = async () => {
     console.log('Глобальные права на просмотр задачи:', state.canViewTask);
 
     state.canViewTaskIds = (state.objectPermissionsDict['bpms.view_task'] || []).map(Number);
-    state.object.child_tasks = state.object.child_tasks.filter(child_task => state.canViewTaskIds.includes(child_task.id));
+    console.log('Объектные права на просмотр задачи:', state.canViewTaskIds);
+    if (!state.canViewTaskGlobal) {
+      state.object.child_tasks = state.object.child_tasks.filter(child_task => state.canViewTaskIds.includes(child_task.id));
+    }
     console.log('Доступные задачи:', state.object.child_tasks);
 
     state.canEditTask = state.globalPermissionsList.includes('bpms.change_task') ||

@@ -267,6 +267,8 @@ const createObject = async () => {
 
     console.log('Объект создан:', jsonResponse.data);
 
+    localStorage.removeItem('userPermissions');
+
     const taskId = route.query.taskId || '';
     if (taskId){
       router.push({ name: 'TaskTemplateDetail', params: { id: taskId }  });

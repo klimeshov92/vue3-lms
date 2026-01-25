@@ -223,6 +223,8 @@ const createObject = async () => {
       console.log('Аватар успешно обновлен:', avatarPatchResponse.data);
     }
 
+    localStorage.removeItem('userPermissions');
+
     router.push({ name: 'PublicPlanDetail', params: { id: jsonResponse.data.id }  });
   } catch (error) {
     if (error.response && error.response.data) {

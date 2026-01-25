@@ -796,6 +796,8 @@ const createObject = async () => {
 
     console.log('Объект создан:', jsonResponse.data);
 
+    localStorage.removeItem('userPermissions');
+
     const planId = route.query.planId || '';
     if (planId){
       router.push({ name: 'TaskTemplateDetail', params: { id: planId }  });

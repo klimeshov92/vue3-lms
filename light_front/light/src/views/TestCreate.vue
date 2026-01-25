@@ -210,6 +210,8 @@ const createObject = async () => {
 
     console.log('Объект создан:', jsonResponse.data);
 
+    localStorage.removeItem('userPermissions');
+
     if (avatarFile.value) {
       const avatarFormData = new FormData();
       avatarFormData.append('avatar', avatarFile.value);

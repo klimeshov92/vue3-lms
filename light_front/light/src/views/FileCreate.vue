@@ -201,6 +201,8 @@ const createObject = async () => {
       console.log('Файл успешно обновлен:', filePatchResponse.data);
     }
 
+    localStorage.removeItem('userPermissions');
+
     router.push({ name: 'FileDetail', params: { id: jsonResponse.data.id }  });
   } catch (error) {
     if (error.response && error.response.data) {
