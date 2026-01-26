@@ -536,6 +536,7 @@ const state = reactive({
   canDeleteTaskGlobal: false,
   canDeleteTaskIds: [],
   canPerform: false,
+  canViewTopic: false,
   canViewAccountObjectPermission: false,
   canAddAccountObjectPermission: false,
   canDeleteAccountObjectPermission: false,
@@ -647,6 +648,41 @@ const confirmParticipation = async () => {
   }
 };
 
+
+const checkPermissionsVersion = async () => {
+  console.log('Проверяем версию прав')
+  const localPermissions = JSON.parse(localStorage.getItem('userPermissions'))
+
+  if (!localPermissions?.permissions_version) return
+  console.log('Текущая версия прав:', localPermissions.permissions_version)
+
+  let token = localStorage.getItem('access_token')
+  const validToken = isTokenValid(token)
+  if (!token || !validToken) return
+
+  try {
+    const resp = await axios.get(
+      `${baseUrl}/user_permissions_version/${localPermissions.permissions_version}/`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+
+    if (!resp.data.actual) {
+      console.log('Версия прав устарела — очищаем память')
+      localStorage.removeItem('userPermissions')
+    } else {
+      console.log('Версия прав актуальна')
+    }
+
+  } catch (error) {
+    console.error('Ошибка проверки версии прав:', error);
+    localStorage.removeItem('userPermissions')
+  }
+}
+
 const loadUserPermissions = async () => {
   let token = localStorage.getItem('access_token');
   const validToken = isTokenValid(token);
@@ -701,7 +737,6 @@ const loadUserPermissions = async () => {
     console.log('Глобальные права на просмотр задачи:', state.canViewTask);
 
     state.canViewTaskIds = (state.objectPermissionsDict['bpms.view_task'] || []).map(Number);
-    console.log('Объектные права на просмотр задачи:', state.canViewTaskIds);
     if (!state.canViewTaskGlobal) {
       state.object.child_tasks = state.object.child_tasks.filter(child_task => state.canViewTaskIds.includes(child_task.id));
     }
@@ -776,6 +811,12 @@ const loadUserPermissions = async () => {
       state.canPerform = state.object.executor.id == validToken.user_id
     }
     console.log('Редактирование результата:', state.canPerform);
+
+    if (state.object.topic) {
+      state.canViewTopic = state.globalPermissionsList.includes('comments.view_topic') ||
+      (state.objectPermissionsDict['comments.view_topic'] && state.objectPermissionsDict['comments.view_topic'].includes(Number(state.object.topic.id)));
+      console.log('Права на просмотр топика:', state.canViewTopic);
+    }
     
   } catch (error) {
     console.error('Ошибка при загрузке разрешений пользователя:', error);
@@ -789,7 +830,7 @@ const back = () => {
 const tabs = computed(() => [
   { name: 'desc', label: 'Описание' },
   { name: 'details', label: 'Детали' },
-  state.object.topic ? { name: 'messages', label: 'Комментарии' } : null,
+  state.canViewTopic ? { name: 'messages', label: 'Комментарии' } : null,
   state.object.task_type == 'plan_implementation' ? { name: 'child_tasks', label: 'Подзадачи' } : null,
   state.canViewAccountsGroupObjectPermission ? { name: 'accountsGroupObjectPermissions', label: 'Объектные права групп' } : null,
   state.canViewAccountObjectPermission ? { name: 'accountObjectPermissions', label: 'Объектные права аккаунтов' } : null,
@@ -806,6 +847,7 @@ onMounted(async () => {
   console.log('Компонент смонтирован, начинаем загрузку данных...');
   try {
     await fetchObject();
+    await checkPermissionsVersion();
     await loadUserPermissions();
     loading.value = true;
   } catch (error) {

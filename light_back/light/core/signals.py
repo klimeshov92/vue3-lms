@@ -21,6 +21,7 @@ from datetime import datetime, timedelta
 from datetime import date
 from notifications.models import NotificationSettings
 from django.contrib.contenttypes.models import ContentType
+from guardian.shortcuts import assign_perm
 
 # Импортируем логи.
 import logging
@@ -301,6 +302,106 @@ def update_groups_users(sender, instance, **kwargs):
         # Повторный вызов исключения в режиме отладки.
         if settings.DEBUG:
             raise
+
+@receiver(post_save)
+def assign_creator_object_permissions(sender, instance, created, **kwargs):
+
+    EXCLUDED_MODELS = {
+        # Управляющие элементы.
+        "controlelementevent",
+        "controlelementcondition",
+        "controlelementaction",
+
+        # Результаты задач.
+        "taskresult",
+        "planresult",
+        "materialresult",
+        "newresult",
+        "courseresult",
+        "eventresult",
+        "testresult",
+        "testattempt",
+        "questionresult",
+        "answerresult",
+
+        # Очереди.
+        "queueexecutor",
+        "queuetask",
+
+        # Тесты
+        "testsection",
+        "testsectionquestion",
+        "question",
+        "answer",
+        "relevantpoint",
+
+        # Права.
+        "permission",
+        "accountsgroupobjectpermission",
+        "accountobjectpermission",
+    }
+
+    try:
+        if not created:
+            return
+
+        model_name = sender._meta.model_name.lower()
+
+        # Исключённые модели.
+        if model_name in EXCLUDED_MODELS:
+            logger.debug(f"Пропускаем {model_name}: модель в списке исключений.")
+            return
+
+        # Пропуск системных моделей.
+        if sender._meta.app_label in ["admin", "auth", "sessions", "contenttypes"]:
+            return
+
+        # Нет создателя.
+        if not hasattr(instance, "creator"):
+            return
+
+        creator = instance.creator
+        if not creator:
+            logger.debug(f"{model_name}: creator отсутствует, пропускаем.")
+            return
+
+        content_type = ContentType.objects.get_for_model(sender)
+
+        # Просмотр.
+        perm_view = f"view_{model_name}"
+        has_view = content_type.permission_set.filter(codename=perm_view).exists()
+
+        if has_view:
+            assign_perm(perm_view, creator, instance)
+            logger.info(
+                f"Назначено право {perm_view} создателю {creator} на {sender.__name__} (id={instance.pk})"
+            )
+        else:
+            logger.debug(f"{model_name}: разрешение {perm_view} отсутствует, пропускаем.")
+
+        # Изменение.
+        perm_change = f"change_{model_name}"
+        has_change = content_type.permission_set.filter(codename=perm_change).exists()
+
+        if has_change:
+            assign_perm(perm_change, creator, instance)
+            logger.info(
+                f"Назначено право {perm_change} создателю {creator} на {sender.__name__} (id={instance.pk})"
+            )
+        else:
+            logger.debug(f"{model_name}: разрешение {perm_change} отсутствует, пропускаем.")
+
+        creator.permissions_version += 1
+        creator.save(update_fields=['permissions_version'])
+        logger.info(
+            f"Версия прав пользователя {creator.id} увеличена до {creator.permissions_version}"
+        )
+
+    except Exception as e:
+        logger.error(
+            f"Ошибка в assign_creator_object_permissions для модели {sender.__name__}: {e}",
+            exc_info=True
+        )
 
 @receiver(post_delete)
 def cleanup_object_permissions_for_instance(sender, instance, **kwargs):

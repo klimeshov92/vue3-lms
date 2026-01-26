@@ -135,7 +135,6 @@ def assignment_task_create(instance, executor, task_template, plan=None):
             type='task_co_observers'
         )
 
-        task.co_executor_group.user_set.set(task.co_executors.all())
         task.controller_group.user_set.set(task.controllers.all())
         task.observer_group.user_set.set(task.observers.all())
 
@@ -146,6 +145,7 @@ def assignment_task_create(instance, executor, task_template, plan=None):
         if task.executor:
             assign_perm('view_task', task.executor, task)
             logger.info(f"Права на задачу {task.id} назначены исполнителю {task.executor}")
+
         assign_perm('view_task', task.co_executor_group, task)
         logger.info(f"Права на задачу {task.id} назначены группе соисполнителей {task.co_executor_group}")
 
@@ -155,6 +155,20 @@ def assignment_task_create(instance, executor, task_template, plan=None):
 
         assign_perm('view_task', task.observer_group, task)
         logger.info(f"Права на задачу {task.id} назначены группе наблюдателей {task.observer_group}")
+
+        affected_users = set()
+        if task.executor:
+            affected_users.add(task.executor)
+        affected_users.update(task.co_executors.all())
+        affected_users.update(task.controllers.all())
+        affected_users.update(task.observers.all())
+
+        for user in affected_users:
+            user.permissions_version += 1
+            user.save(update_fields=['permissions_version'])
+            logger.info(
+                f"Версия прав пользователя {user.id} увеличена до {user.permissions_version}"
+            )
 
         if task_template.task_type == 'plan_implementation':
 

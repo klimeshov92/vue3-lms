@@ -200,7 +200,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny, ObjectPermission]
     pagination_class = CustomPageNumberPagination
     filterset_class = TaskFilter
-    ordering_fields = ['planned_end', 'plan__name', 'name']
+    ordering_fields = ['planned_end', 'plan__name', 'item', 'name']
     ordering = ['planned_end']
 
     def get_serializer_class(self):

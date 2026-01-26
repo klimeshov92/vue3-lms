@@ -335,6 +335,41 @@ const resetFilters = () => {
   loadObjects(filters, currentPage.value);
 };
 
+
+const checkPermissionsVersion = async () => {
+  console.log('Проверяем версию прав')
+  const localPermissions = JSON.parse(localStorage.getItem('userPermissions'))
+
+  if (!localPermissions?.permissions_version) return
+  console.log('Текущая версия прав:', localPermissions.permissions_version)
+
+  let token = localStorage.getItem('access_token')
+  const validToken = isTokenValid(token)
+  if (!token || !validToken) return
+
+  try {
+    const resp = await axios.get(
+      `${baseUrl}/user_permissions_version/${localPermissions.permissions_version}/`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+
+    if (!resp.data.actual) {
+      console.log('Версия прав устарела — очищаем память')
+      localStorage.removeItem('userPermissions')
+    } else {
+      console.log('Версия прав актуальна')
+    }
+
+  } catch (error) {
+    console.error('Ошибка проверки версии прав:', error);
+    localStorage.removeItem('userPermissions')
+  }
+}
+
 const loadUserPermissions = async () => {
   let token = localStorage.getItem('access_token');
   const validToken = isTokenValid(token);
@@ -391,7 +426,8 @@ onMounted(async () => {
     await loadCategories(),
     await loadFilters(),
     await loadCurrentPage(),
-    await loadUserPermissions(),
+    await checkPermissionsVersion();
+    await loadUserPermissions();
     await loadObjects(filters, currentPage.value)
     loading.value = true;
   } catch (error) {

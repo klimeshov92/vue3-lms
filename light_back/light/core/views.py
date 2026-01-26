@@ -178,6 +178,25 @@ class ClientsViewSet(viewsets.ModelViewSet):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+def user_permissions_version(request, client_version):
+    try:
+        user = request.user if request.user.is_authenticated else get_anonymous_user()
+        logger.debug(f"Аутентифицированный пользователь: {user}")
+
+        actual = client_version == user.permissions_version
+        logger.debug(f"Версия прав актуальна: {actual}")
+
+        return Response({
+            'actual': actual,
+            'server_version': user.permissions_version,
+        })
+
+    except Exception as e:
+        logger.error(f'Ошибка проверки версии прав: {e}', exc_info=True)
+        return Response({'actual': False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def user_permissions(request):
     try:
         # Убедимся, что пользователь аутентифицирован
@@ -210,6 +229,7 @@ def user_permissions(request):
         # Возвращаем JSON с глобальными и объектными разрешениями
         return Response({
             'user_id': user.id,
+            'permissions_version': user.permissions_version,
             'global_permissions': global_permissions,  # Список для JSON
             'object_permissions': object_permissions  # Словарь с разрешениями объектов
         })

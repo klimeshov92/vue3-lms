@@ -31,6 +31,7 @@ urlpatterns = [
    # Подключаем все маршруты, которые создал роутер
    path('', include(router.urls)),
    path('check-token/', check_token, name='check_token'),
+   path('user_permissions_version/<int:client_version>/', user_permissions_version, name='user_permissions_version'),
    path('user_permissions/', user_permissions, name='user_permissions'),
    path('users_permissions/', users_permissions, name='users_permissions'),
    path('cabinet/', cabinet, name='cabinet'),

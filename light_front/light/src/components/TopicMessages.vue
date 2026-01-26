@@ -127,6 +127,7 @@ const props = defineProps({
   topic_id: Number,
 });
 console.log("Topic ID:", props.topic_id);
+
 const user_id = ref(null);
 const currentlyEditingMessageId = ref(null);
 

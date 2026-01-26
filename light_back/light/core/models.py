@@ -25,6 +25,7 @@ from guardian.models import GroupObjectPermissionAbstract, UserObjectPermissionA
 '''
 class Account(AbstractUser):
     mdm_id = models.CharField(verbose_name='MDM ID аккаунта', unique=True, null=True, blank=True, max_length=32)
+    permissions_version = models.PositiveIntegerField(default=1)
     avatar = models.ImageField(verbose_name='Аватар', null=True, blank=True, upload_to='account_avatars/')
     self_registration = models.BooleanField(verbose_name='Самостоятельная регистрация', default=False)
     legal_agree = models.BooleanField(default=False, verbose_name="Согласие с пользовательским соглашением")
