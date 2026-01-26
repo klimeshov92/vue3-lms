@@ -23,7 +23,7 @@ debug.log*
 # Frontend
 # =========================
 node_modules/
-dist/
+#dist/
 
 # =========================
 # Docker volumes
