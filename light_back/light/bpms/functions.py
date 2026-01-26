@@ -128,11 +128,11 @@ def assignment_task_create(instance, executor, task_template, plan=None):
         )
         task.controller_group = AccountsGroup.objects.create(
             name=f"Контролеры задачи [{task.id}]",
-            type='task_co_controllers'
+            type='task_controllers'
         )
         task.observer_group = AccountsGroup.objects.create(
             name=f"Наблюдатели задачи [{task.id}]",
-            type='task_co_observers'
+            type='task_observers'
         )
 
         task.controller_group.user_set.set(task.controllers.all())

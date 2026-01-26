@@ -540,13 +540,13 @@ const loadUserPermissions = async () => {
     state.canDeleteAccountsGroupObjectPermission = state.globalPermissionsList.includes('core.delete_accounts_group_object_permission');
     console.log('Права на удаление объектных прав групп:', state.canDeleteAccountsGroupObjectPermission);
 
-    state.canAddAccountGroupGenerator = state.globalPermissionsList.includes('core.add_group_generator');
+    state.canAddAccountGroupGenerator = state.globalPermissionsList.includes('core.add_group_generator') && state.object.type == 'custom';
     console.log('Права на добавление генератора группы:', state.canAddAccountGroupGenerator);
 
     state.canViewAccountGroupGenerator = state.globalPermissionsList.includes('core.view_group_generator');
     console.log('Права на просмотр генератора группы:', state.canViewAccountGroupGenerator);
 
-    state.canEditAccountGroupGenerator = state.globalPermissionsList.includes('core.change_group_generator');
+    state.canEditAccountGroupGenerator = state.globalPermissionsList.includes('core.change_group_generator') && state.object.type == 'custom';
     console.log('Права на изменение генератора группы:', state.canEditAccountGroupGenerator);
 
     state.canViewAccountObjectPermission = state.globalPermissionsList.includes('core.view_account_object_permission');

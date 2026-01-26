@@ -1,9 +1,10 @@
 # Импортируем настройки.
 from django.conf import settings
 # Импортируем модуль models.
+from django.contrib.auth.models import User, Group
 from django.db import models
 # Импортируем post_save из модуля signals. post_save - сигнал, который отправляется после сохранения объекта модели.
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_delete
 # Импортируем receiver из модуля dispatch. receiver - функция-декоратор для подключения функций обработки сигналов.
 from django.dispatch import receiver
 # Импортируем ответ с ошибкой сервера.
@@ -22,11 +23,16 @@ from datetime import date
 from notifications.models import NotificationSettings
 from django.contrib.contenttypes.models import ContentType
 from guardian.shortcuts import assign_perm
+from django.db.models.signals import m2m_changed
+
 
 # Импортируем логи.
 import logging
 # Создаем логгер с именем 'project'.
 logger = logging.getLogger('project')
+
+
+MAX_PERMISSIONS_VERSION = 1_000_000
 
 @receiver(post_save, sender=Organization)
 def organizations_post_save(sender, instance, created, **kwargs):
@@ -250,9 +256,16 @@ def placement_post_delete(sender, instance, **kwargs):
         if settings.DEBUG:
             raise
 
-@receiver(post_save, sender=GroupGenerator)
-def update_groups_users(sender, instance, **kwargs):
+@receiver(m2m_changed, sender=GroupGenerator.added_users.through)
+@receiver(m2m_changed, sender=GroupGenerator.excluded_users.through)
+@receiver(m2m_changed, sender=GroupGenerator.added_groups.through)
+@receiver(m2m_changed, sender=GroupGenerator.excluded_groups.through)
+def update_groups_users(sender, instance, action, **kwargs):
+
     try:
+
+        if action not in ("post_add", "post_remove", "post_clear"):
+            return
 
         # Забирае переменные.
         group = instance.group
@@ -295,6 +308,7 @@ def update_groups_users(sender, instance, **kwargs):
 
         # Назначаем оставшихся пользователей группе.
         group.user_set.set(final_users)
+        group.save()
 
     # Логирование исключений, если они возникнут.
     except Exception as e:
@@ -455,7 +469,7 @@ def account_object_permission_post_save(sender, instance, created, **kwargs):
     try:
         user = instance.user
 
-        if user.permissions_version >= 1_000_000:
+        if user.permissions_version >= MAX_PERMISSIONS_VERSION:
             user.permissions_version = 1
         else:
             user.permissions_version += 1
@@ -477,7 +491,7 @@ def account_object_permission_post_delete(sender, instance, **kwargs):
     try:
         user = instance.user
 
-        if user.permissions_version >= 1_000_000:
+        if user.permissions_version >= MAX_PERMISSIONS_VERSION:
             user.permissions_version = 1
         else:
             user.permissions_version += 1
@@ -500,7 +514,7 @@ def accounts_group_object_permission_post_save(sender, instance, created, **kwar
         users = group.user_set.all()
 
         for user in users:
-            if user.permissions_version >= 1_000_000:
+            if user.permissions_version >= MAX_PERMISSIONS_VERSION:
                 user.permissions_version = 1
             else:
                 user.permissions_version += 1
@@ -524,7 +538,7 @@ def accounts_group_object_permission_post_delete(sender, instance, **kwargs):
         users = group.user_set.all()
 
         for user in users:
-            if user.permissions_version >= 1_000_000:
+            if user.permissions_version >= MAX_PERMISSIONS_VERSION:
                 user.permissions_version = 1
             else:
                 user.permissions_version += 1
@@ -540,3 +554,121 @@ def accounts_group_object_permission_post_delete(sender, instance, **kwargs):
             exc_info=True
         )
 
+@receiver(pre_delete, sender=AccountsGroup)
+def accounts_group_pre_delete_update_users_permissions(sender, instance, **kwargs):
+    try:
+        users = list(instance.user_set.all())
+
+        for user in users:
+            if user.permissions_version >= 1_000_000:
+                user.permissions_version = 1
+            else:
+                user.permissions_version += 1
+
+            user.save(update_fields=["permissions_version"])
+
+            logger.debug(
+                f"Версия прав пользователя {user.id} обновлена до {user.permissions_version} перед удалением группы {instance.id}"
+            )
+
+    except Exception as e:
+        logger.error(
+            f"Ошибка в pre_delete AccountsGroup {instance.id}: {e}",
+            exc_info=True
+        )
+        if settings.DEBUG:
+            raise
+
+@receiver(m2m_changed, sender=AccountsGroup.permissions.through)
+def accounts_group_permissions_changed(sender, instance, action, pk_set, **kwargs):
+
+    if action not in ("post_add", "post_remove", "post_clear"):
+        return
+
+    try:
+        users = instance.user_set.all()
+
+        logger.debug(
+            f"Изменились права группы {instance.id}, action={action}, pk_set={pk_set}"
+        )
+
+        for user in users:
+            if user.permissions_version >= MAX_PERMISSIONS_VERSION:
+                user.permissions_version = 1
+            else:
+                user.permissions_version += 1
+
+            user.save(update_fields=["permissions_version"])
+
+            logger.debug(
+                f"Версия прав пользователя {user.id} обновлена до {user.permissions_version} из-за изменения прав группы {instance.id}"
+            )
+
+    except Exception as e:
+        logger.error(
+            f"Ошибка в m2m_changed AccountsGroup.permissions: {e}",
+            exc_info=True
+        )
+        if settings.DEBUG:
+            raise
+
+@receiver(m2m_changed, sender=Account.user_permissions.through)
+def account_user_permissions_changed(sender, instance, action, pk_set, **kwargs):
+
+    if action not in ("post_add", "post_remove", "post_clear"):
+        return
+
+    try:
+        logger.debug(
+            f"Изменились user_permissions у пользователя {instance.id}, action={action}, pk_set={list(pk_set) if pk_set else pk_set}"
+        )
+
+        if instance.permissions_version >= MAX_PERMISSIONS_VERSION:
+            instance.permissions_version = 1
+        else:
+            instance.permissions_version += 1
+
+        instance.save(update_fields=["permissions_version"])
+
+        logger.debug(
+            f"Версия прав пользователя {instance.id} обновлена до {instance.permissions_version}"
+        )
+
+    except Exception as e:
+        logger.error(
+            f"Ошибка в m2m_changed Account.user_permissions: {e}",
+            exc_info=True
+        )
+        if settings.DEBUG:
+            raise
+
+
+@receiver(m2m_changed, sender=Account.groups.through)
+def account_groups_changed(sender, instance, action, pk_set, **kwargs):
+
+    if action not in ("post_add", "post_remove", "post_clear"):
+        return
+
+    try:
+        logger.debug(
+            f"Изменились groups у пользователя {instance.id}, action={action}, pk_set={list(pk_set) if pk_set else pk_set}"
+        )
+
+        if instance.permissions_version >= MAX_PERMISSIONS_VERSION:
+            instance.permissions_version = 1
+        else:
+            instance.permissions_version += 1
+
+        instance.save(update_fields=["permissions_version"])
+
+        logger.debug(
+            f"Версия прав пользователя {instance.id} обновлена до {instance.permissions_version}"
+        )
+
+    except Exception as e:
+        logger.error(
+            f"Ошибка в m2m_changed Account.groups: {e}",
+            exc_info=True
+        )
+        if settings.DEBUG:
+            raise

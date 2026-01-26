@@ -287,8 +287,9 @@ class PublicPlanSerializer(serializers.ModelSerializer):
         last_task = Task.objects.filter(
             task_template_id=obj.task_template.id,
             executor=self.context['request'].user,
-            task_result__isnull=False,
+            plan_result__isnull=False,
         ).order_by('-id').first()
+        logger.debug(f'!!!!!!!!!!!!!!!!!!!!!!! {last_task}')
         return LastTaskBaseSerializer(last_task, context=self.context).data if last_task else None
 
     def get_self_assignment_task_template(self, obj):

@@ -152,7 +152,7 @@ class EventTemplateEditSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data)
         instance.admin_group = AccountsGroup.objects.create(
             name=f"Админы мероприятия [{instance.id}]",
-            type='admin_group'
+            type='event_responsible'
         )
         instance.admin_group.user_set.set(instance.admins.all())
         instance.save()

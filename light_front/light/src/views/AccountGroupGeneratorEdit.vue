@@ -155,10 +155,6 @@
           <input v-model="form.days_worked_lte" id="days_worked_lte" type="number" class="form-input" placeholder="Введите максимальное количество отработанных дней" />
         </div>
 
-        <div class="form-field">
-          <label for="autoupdate" class="form-label">Автообновление:</label>
-          <input v-model="form.autoupdate" id="autoupdate" type="checkbox" class="form-input" />
-        </div>
       </form>
 
       <div class="form-menu button-group">
@@ -195,7 +191,6 @@ const form = reactive({
   use_days_worked: false,
   days_worked_gte: null,
   days_worked_lte: null,
-  autoupdate: false,
 });
 
 watch(
@@ -339,7 +334,6 @@ const saveChanges = async () => {
       excluded_groups: form.excluded_groups.map(group => group.id),
       days_worked_gte: form.days_worked_gte,
       days_worked_lte: form.days_worked_lte,
-      autoupdate: form.autoupdate,
     };
     const groupId = form.group.id
 

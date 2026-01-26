@@ -576,17 +576,14 @@ class GroupGenerator(models.Model):
         verbose_name='Отработано от (дней)',
         null=True,
         blank=True,
-        default=0,
         validators=[MinValueValidator(0)]
     )
     days_worked_lte = models.IntegerField(
         verbose_name='Отработано до (дней)',
         null=True,
         blank=True,
-        default=90,
         validators=[MinValueValidator(0)]
     )
-    autoupdate = models.BooleanField(verbose_name='Автообновление', default=False)
     created = models.DateTimeField(auto_now_add=True, verbose_name='Дата и время создания', db_index=True)
     changed = models.DateTimeField(auto_now=True, verbose_name='Дата и время изменения', db_index=True)
     creator = models.ForeignKey(
