@@ -1,6 +1,9 @@
 # Стадия сборки Vue
 FROM node:20-alpine AS build
 
+# Увеличиваем память Node
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # Рабочая директория
 WORKDIR /app
 
