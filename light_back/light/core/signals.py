@@ -391,12 +391,6 @@ def assign_creator_object_permissions(sender, instance, created, **kwargs):
         else:
             logger.debug(f"{model_name}: разрешение {perm_change} отсутствует, пропускаем.")
 
-        creator.permissions_version += 1
-        creator.save(update_fields=['permissions_version'])
-        logger.info(
-            f"Версия прав пользователя {creator.id} увеличена до {creator.permissions_version}"
-        )
-
     except Exception as e:
         logger.error(
             f"Ошибка в assign_creator_object_permissions для модели {sender.__name__}: {e}",
@@ -454,5 +448,95 @@ def cleanup_object_permissions_for_instance(sender, instance, **kwargs):
     else:
         logger.debug(
             f'Нет объектных прав'
+        )
+
+@receiver(post_save, sender=AccountObjectPermission)
+def account_object_permission_post_save(sender, instance, created, **kwargs):
+    try:
+        user = instance.user
+
+        if user.permissions_version >= 1_000_000:
+            user.permissions_version = 1
+        else:
+            user.permissions_version += 1
+        user.save(update_fields=['permissions_version'])
+
+        logger.debug(
+            f"Версия прав пользователя {user.id} увеличена до {user.permissions_version}"
+        )
+
+    except Exception as e:
+        logger.error(
+            f"Ошибка в post_save AccountObjectPermission: {e}",
+            exc_info=True
+        )
+
+
+@receiver(post_delete, sender=AccountObjectPermission)
+def account_object_permission_post_delete(sender, instance, **kwargs):
+    try:
+        user = instance.user
+
+        if user.permissions_version >= 1_000_000:
+            user.permissions_version = 1
+        else:
+            user.permissions_version += 1
+        user.save(update_fields=['permissions_version'])
+
+        logger.debug(
+            f"Версия прав пользователя {user.id} увеличена до {user.permissions_version}"
+        )
+
+    except Exception as e:
+        logger.error(
+            f"Ошибка в post_delete AccountObjectPermission: {e}",
+            exc_info=True
+        )
+
+@receiver(post_save, sender=AccountsGroupObjectPermission)
+def accounts_group_object_permission_post_save(sender, instance, created, **kwargs):
+    try:
+        group = instance.group
+        users = group.user_set.all()
+
+        for user in users:
+            if user.permissions_version >= 1_000_000:
+                user.permissions_version = 1
+            else:
+                user.permissions_version += 1
+            user.save(update_fields=['permissions_version'])
+
+            logger.debug(
+                f"Версия прав пользователя {user.id} увеличена до {user.permissions_version}"
+            )
+
+    except Exception as e:
+        logger.error(
+            f"Ошибка в post_save AccountsGroupObjectPermission: {e}",
+            exc_info=True
+        )
+
+
+@receiver(post_delete, sender=AccountsGroupObjectPermission)
+def accounts_group_object_permission_post_delete(sender, instance, **kwargs):
+    try:
+        group = instance.group
+        users = group.user_set.all()
+
+        for user in users:
+            if user.permissions_version >= 1_000_000:
+                user.permissions_version = 1
+            else:
+                user.permissions_version += 1
+            user.save(update_fields=['permissions_version'])
+
+            logger.debug(
+                f"Версия прав пользователя {user.id} увеличена до {user.permissions_version}"
+            )
+
+    except Exception as e:
+        logger.error(
+            f"Ошибка в post_delete AccountsGroupObjectPermission: {e}",
+            exc_info=True
         )
 
