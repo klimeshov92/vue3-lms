@@ -644,26 +644,30 @@ def account_user_permissions_changed(sender, instance, action, pk_set, **kwargs)
 
 
 @receiver(m2m_changed, sender=Account.groups.through)
-def account_groups_changed(sender, instance, action, pk_set, **kwargs):
-
+def account_groups_changed(sender, instance, action, reverse, pk_set, **kwargs):
     if action not in ("post_add", "post_remove", "post_clear"):
         return
 
     try:
-        logger.debug(
-            f"Изменились groups у пользователя {instance.id}, action={action}, pk_set={list(pk_set) if pk_set else pk_set}"
-        )
-
-        if instance.permissions_version >= MAX_PERMISSIONS_VERSION:
-            instance.permissions_version = 1
+        # Если изменение пришло СО СТОРОНЫ ГРУППЫ
+        if reverse:
+            # instance = AccountsGroup
+            users = instance.user_set.all()
         else:
-            instance.permissions_version += 1
+            # instance = Account
+            users = [instance]
 
-        instance.save(update_fields=["permissions_version"])
+        for user in users:
+            if user.permissions_version >= MAX_PERMISSIONS_VERSION:
+                user.permissions_version = 1
+            else:
+                user.permissions_version += 1
 
-        logger.debug(
-            f"Версия прав пользователя {instance.id} обновлена до {instance.permissions_version}"
-        )
+            user.save(update_fields=["permissions_version"])
+
+            logger.debug(
+                f"Версия прав пользователя {user.id} обновлена до {user.permissions_version}"
+            )
 
     except Exception as e:
         logger.error(
@@ -672,3 +676,4 @@ def account_groups_changed(sender, instance, action, pk_set, **kwargs):
         )
         if settings.DEBUG:
             raise
+
