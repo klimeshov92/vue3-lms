@@ -29,12 +29,12 @@ load_dotenv(BASE_DIR.parent / "deploy" / ".env")
 # SECRET_KEY = 'django-insecure-+vyhvpv-nbk21^vn^%c_6)mk)c23^-k)x)3&hv6mdm)olrh#55'
 SECRET_KEY = os.getenv(
     'DJANGO_SECRET_KEY',
-    #'django-insecure-+vyhvpv-nbk21^vn^%c_6)mk)c23^-k)x)3&hv6mdm)olrh#55'
+    'django-insecure-+vyhvpv-nbk21^vn^%c_6)mk)c23^-k)x)3&hv6mdm)olrh#55'
 )
 
 
 # RECAPTCHA_SECRET_KEY = "6Lcd_j8sAAAAAGaG05kocmPUM_DpIcMtGOlfpZjO"
-RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY')
+RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY', '6Lcd_j8sAAAAAGaG05kocmPUM_DpIcMtGOlfpZjO')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
@@ -382,12 +382,12 @@ EMAIL_USE_SSL = True  # Использовать ли SSL (для обеспеч
 #EMAIL_HOST_USER = 'diego.aufderhar37@ethereal.email'  # Ваш адрес электронной почты от smtp.ethereal.email.
 #EMAIL_HOST_PASSWORD = 'yHRVdXG8c7kBeK2aD6'  # Пароль от вашего адреса электронной почты от smtp.ethereal.email.
 #DEFAULT_FROM_EMAIL = "diego.aufderhar37@ethereal.email" # Адрес отправителя.
-#EMAIL_HOST_USER = 's.klimeshov.home@yandex.ru'  # Ваш адрес электронной почты от smtp.yandex.ru.
-#EMAIL_HOST_PASSWORD = 'gufryfaechxjpiqy'  # Пароль от вашего адреса электронной почты от smtp.yandex.ru.
-#DEFAULT_FROM_EMAIL = "s.klimeshov.home@yandex.ru" # Адрес отправителя.
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+EMAIL_HOST_USER = 's.klimeshov.home@yandex.ru'  # Ваш адрес электронной почты от smtp.yandex.ru.
+EMAIL_HOST_PASSWORD = 'gufryfaechxjpiqy'  # Пароль от вашего адреса электронной почты от smtp.yandex.ru.
+DEFAULT_FROM_EMAIL = "s.klimeshov.home@yandex.ru" # Адрес отправителя.
+#EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+#EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+#DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 
 # Установка и настройка Redis для использования с Channels.
 CHANNEL_LAYERS = {
