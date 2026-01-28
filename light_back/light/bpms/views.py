@@ -202,6 +202,14 @@ class TaskViewSet(viewsets.ModelViewSet):
     filterset_class = TaskFilter
     ordering_fields = ['planned_end', 'plan__name', 'item', 'name']
     ordering = ['planned_end']
+    permission_map = {
+        'list': 'bpms.view_task',
+        'retrieve': 'bpms.view_task',
+        'create': 'bpms.add_task',
+        'update': 'bpms.change_task',
+        'partial_update': 'bpms.change_task',
+        'destroy': 'bpms.delete_task',
+    }
 
     def get_serializer_class(self):
         if self.action == 'create':

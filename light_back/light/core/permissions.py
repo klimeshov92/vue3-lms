@@ -24,56 +24,68 @@ ACTION_PERMISSION_MAP = {
     'destroy': 'delete',
 }
 
-
 class ObjectPermission(BasePermission):
 
     def get_user(self, request):
-        if not request.user.is_authenticated:
-            return get_anonymous_user()
-        return request.user
+        return request.user if request.user.is_authenticated else get_anonymous_user()
 
     def has_permission(self, request, view):
         user = self.get_user(request)
         action = view.action
 
+        # === 1. ЯВНОЕ permission от ViewSet ===
+        if hasattr(view, 'permission_map') and action in view.permission_map:
+            perm = view.permission_map[action]
+
+            logger.debug(
+                f"[PERM_MAP] user={user}, action={action}, perm={perm}"
+            )
+
+            if user.has_perm(perm):
+                return True
+
+            if action == 'list':
+                try:
+                    qs = get_objects_for_user(user, perm)
+                except (Permission.DoesNotExist, ContentType.DoesNotExist):
+                    return False
+
+                if qs.exists():
+                    view.queryset = qs
+                    return True
+
+            return False
+
+        # === 2. FALLBACK — по модели ===
         model = getattr(view.queryset, 'model', None)
         if not model:
-            logger.debug("Нет queryset.model — доступ разрешён")
             return True
 
-        permission_codename = self.get_permission_codename(action, model)
+        perm = self._get_permission_codename(action, model)
+
         logger.debug(
-            f"Проверка прав: user={user}, action={action}, permission={permission_codename}"
+            f"[PERM_MODEL] user={user}, action={action}, perm={perm}"
         )
 
-        # Если для action не требуется permission
-        if not permission_codename:
+        if not perm:
             return True
 
-        # Глобальное разрешение
-        if user.has_perm(permission_codename):
-            logger.debug(f"Есть глобальное разрешение {permission_codename}")
+        if user.has_perm(perm):
             return True
 
-        # LIST — объектные разрешения
         if action == 'list':
             try:
-                qs = get_objects_for_user(user, permission_codename)
+                qs = get_objects_for_user(user, perm)
             except (Permission.DoesNotExist, ContentType.DoesNotExist):
-                logger.warning(f"Permission {permission_codename} не существует")
                 return False
 
             if qs.exists():
                 view.queryset = qs
-                logger.debug("Есть объектные разрешения для list")
                 return True
 
-        # Остальные — проверим объект
-        if action in ['retrieve', 'update', 'partial_update', 'destroy']:
-            obj = view.get_object()
-            return self.has_object_permission(request, view, obj)
+        if action in ('retrieve', 'update', 'partial_update', 'destroy'):
+            return self.has_object_permission(request, view, view.get_object())
 
-        logger.warning("Доступ запрещён")
         return False
 
     def has_object_permission(self, request, view, obj):
@@ -81,49 +93,30 @@ class ObjectPermission(BasePermission):
         action = view.action
         model = obj.__class__
 
-        permission_codename = self.get_permission_codename(action, model)
-
-        if not permission_codename:
+        perm = self._get_permission_codename(action, model)
+        if not perm:
             return True
 
-        if user.has_perm(permission_codename):
-            logger.debug(f"Есть глобальное разрешение {permission_codename}")
+        if user.has_perm(perm):
             return True
 
         try:
-            if user.has_perm(permission_codename, obj):
-                logger.debug(f"Есть объектное разрешение {permission_codename}")
-                return True
+            return user.has_perm(perm, obj)
         except (Permission.DoesNotExist, ContentType.DoesNotExist):
-            logger.warning(f"Permission {permission_codename} не существует")
             return False
 
-        logger.warning("Доступ запрещён на уровне объекта")
-        return False
-
-    def get_permission_codename(self, action, model):
+    def _get_permission_codename(self, action, model):
         perm_action = ACTION_PERMISSION_MAP.get(action)
         if not perm_action:
-            logger.debug(f"Action '{action}' не требует permission")
             return None
 
         ct = ContentType.objects.get_for_model(model)
+        codename = f'{perm_action}_{model._meta.model_name}'
 
-        expected_codename = f'{perm_action}_{model._meta.model_name}'
-
-        perm = Permission.objects.filter(
-            content_type=ct,
-            codename=expected_codename
-        ).first()
-
-        if not perm:
-            logger.warning(
-                f"Permission '{perm_action}_*' для модели {model.__name__} не найден"
-            )
+        if not Permission.objects.filter(content_type=ct, codename=codename).exists():
             return None
 
-        return f'{ct.app_label}.{perm.codename}'
-
+        return f'{ct.app_label}.{codename}'
 
 class OldObjectPermission(BasePermission):
 
