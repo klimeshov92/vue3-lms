@@ -387,11 +387,81 @@ def queue_task_executor_choice(sender, instance, created, **kwargs):
 
         def assign_executor(task, executor):
 
-            # Назначаем исполнителя в Task, если он изменился.
             task.executor = executor
             task.save(update_fields=["executor", "changed"])
 
-            logger.debug(f"В задачу {task} назначен исполниетль {executor}")
+            logger.debug(f"В задачу {task} назначен исполнитель {executor}")
+
+            if task.executor:
+                assign_perm('view_task', task.executor, task)
+                logger.info(
+                    f"Права на задачу {task.id} назначены исполнителю {task.executor}"
+                )
+
+                if task.task_type == 'material_review' and task.material:
+                    assign_perm('view_material', task.executor, task.material)
+                    logger.info(
+                        f"Права на материал {task.material.id} назначены исполнителю {task.executor}"
+                    )
+
+                    material_topic = task.material.topics.first()
+                    if material_topic:
+                        assign_perm('view_topic', task.executor, material_topic)
+                        logger.info(
+                            f"Права на топик материала {material_topic.id} назначены исполнителю {task.executor}"
+                        )
+
+                elif task.task_type == 'news_reading' and task.new:
+                    assign_perm('view_new', task.executor, task.new)
+                    logger.info(
+                        f"Права на новость {task.new.id} назначены исполнителю {task.executor}"
+                    )
+
+                    new_topic = task.new.topics.first()
+                    if new_topic:
+                        assign_perm('view_topic', task.executor, new_topic)
+                        logger.info(
+                            f"Права на топик новости {new_topic.id} назначены исполнителю {task.executor}"
+                        )
+
+                elif task.task_type == 'test_taking' and task.test:
+                    assign_perm('view_test', task.executor, task.test)
+                    logger.info(
+                        f"Права на тест {task.test.id} назначены исполнителю {task.executor}"
+                    )
+
+                    test_topic = task.test.topics.first()
+                    if test_topic:
+                        assign_perm('view_topic', task.executor, test_topic)
+                        logger.info(
+                            f"Права на топик теста {test_topic.id} назначены исполнителю {task.executor}"
+                        )
+
+                elif task.task_type == 'course_study' and task.course:
+                    assign_perm('view_course', task.executor, task.course)
+                    logger.info(
+                        f"Права на курс {task.course.id} назначены исполнителю {task.executor}"
+                    )
+
+                    course_topic = task.course.topics.first()
+                    if course_topic:
+                        assign_perm('view_topic', task.executor, course_topic)
+                        logger.info(
+                            f"Права на топик курса {course_topic.id} назначены исполнителю {task.executor}"
+                        )
+
+                elif task.task_type == 'event_participation' and task.event_template:
+                    assign_perm('view_event_template', task.executor, task.event_template)
+                    logger.info(
+                        f"Права на мероприятие {task.event_template.id} назначены исполнителю {task.executor}"
+                    )
+
+                    event_topic = task.event_template.topics.first()
+                    if event_topic:
+                        assign_perm('view_topic', task.executor, event_topic)
+                        logger.info(
+                            f"Права на топик мероприятия {event_topic.id} назначены исполнителю {task.executor}"
+                        )
 
         assign_executor(task=task, executor=executor)
 
