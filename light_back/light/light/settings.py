@@ -37,8 +37,8 @@ SECRET_KEY = os.getenv(
 RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-DEBUG = os.getenv('DJANGO_DEBUG', '0') == '1'
+DEBUG = True
+# DEBUG = os.getenv('DJANGO_DEBUG', '0') == '1'
 
 # Разрешенные хосты.
 # ALLOWED_HOSTS = [
