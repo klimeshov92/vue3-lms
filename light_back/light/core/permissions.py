@@ -109,9 +109,11 @@ class ObjectPermission(BasePermission):
 
         ct = ContentType.objects.get_for_model(model)
 
+        expected_codename = f'{perm_action}_{model._meta.model_name}'
+
         perm = Permission.objects.filter(
             content_type=ct,
-            codename__startswith=f'{perm_action}_'
+            codename=expected_codename
         ).first()
 
         if not perm:
