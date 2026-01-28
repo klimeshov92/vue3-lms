@@ -97,9 +97,9 @@
 
       <router-link :to="{ name: 'TaskTemplateAssignmentList' }" 
         @click="toggleMenu" 
-        class="header-menu_link">
-        <div class="header-menu_link-items-inner"
+        class="header-menu_link"
         v-if="state.canViewTaskTemplateAssignment">
+        <div class="header-menu_link-items-inner">
           <div>
             Назначение шаблона задачи
           </div>
@@ -108,9 +108,9 @@
 
       <router-link :to="{ name: 'QueueList' }" 
         @click="toggleMenu" 
-        class="header-menu_link">
-        <div class="header-menu_link-items-inner"
+        class="header-menu_link"
         v-if="state.canViewQueue">
+        <div class="header-menu_link-items-inner">
           <div>
             Очереди
           </div>
@@ -634,37 +634,37 @@ const loadUserPermissions = async () => {
 
     state.canViewInteraction = state.globalPermissionsList.includes('bpms.view_interaction') ||
       (state.objectPermissionsDict['bpms.view_interaction'] &&
-      state.objectPermissionsDict['bpms.view_interaction'].includes(Number(id)));
+      state.objectPermissionsDict['bpms.view_interaction']?.length > 0);
     console.log('Права на просмотр взаимодействий:', state.canViewInteraction);
 
     state.canViewTaskTemplate = state.globalPermissionsList.includes('bpms.view_task_template') ||
       (state.objectPermissionsDict['bpms.view_task_template'] &&
-      state.objectPermissionsDict['bpms.view_task_template'].includes(Number(id)));
+      state.objectPermissionsDict['bpms.view_task_template']?.length > 0);
     console.log('Права на просмотр шаблона задач:', state.canViewTaskTemplate);
 
     state.canViewTask = state.globalPermissionsList.includes('bpms.view_task') ||
       (state.objectPermissionsDict['bpms.view_task'] &&
-      state.objectPermissionsDict['bpms.view_task'].includes(Number(id)));
+      state.objectPermissionsDict['bpms.view_task']?.length > 0);
     console.log('Права на просмотр задачи:', state.canViewTask);
 
     state.canViewTaskTemplateAssignment = state.globalPermissionsList.includes('bpms.view_task_template_assignment') ||
       (state.objectPermissionsDict['bpms.view_task_template_assignment'] &&
-      state.objectPermissionsDict['bpms.view_task_template_assignment'].includes(Number(id)));
+      state.objectPermissionsDict['bpms.view_task_template_assignment']?.length > 0);
     console.log('Права на просмотр назначений задач:', state.canViewTaskTemplateAssignment);
 
     state.canViewQueue = state.globalPermissionsList.includes('bpms.view_queue') ||
       (state.objectPermissionsDict['bpms.view_queue'] &&
-      state.objectPermissionsDict['bpms.view_queue'].includes(Number(id)));
+      state.objectPermissionsDict['bpms.view_queue']?.length > 0);
     console.log('Права на просмотр очередей:', state.canViewQueue);
 
     state.canViewControlElement = state.globalPermissionsList.includes('bpms.view_control_element') ||
       (state.objectPermissionsDict['bpms.view_control_element'] &&
-      state.objectPermissionsDict['bpms.view_control_element'].includes(Number(id)));
+      state.objectPermissionsDict['bpms.view_control_element']?.length > 0);
     console.log('Права на просмотр управляющих элементов:', state.canViewControlElement);
 
     state.canViewTaskAnalytics = state.globalPermissionsList.includes('bpms.view_analytics') ||
       (state.objectPermissionsDict['bpms.view_analytics'] &&
-      state.objectPermissionsDict['bpms.view_analytics'].includes(Number(id)));
+      state.objectPermissionsDict['bpms.view_analytics']?.length > 0);
     console.log('Права на просмотр аналитики по задачам:', state.canViewTaskAnalytics);
 
     state.canViewPlaning = (
@@ -680,52 +680,52 @@ const loadUserPermissions = async () => {
     
     state.canViewPublicPlan = state.globalPermissionsList.includes('bpms.view_public_plan') ||
       (state.objectPermissionsDict['bpms.view_public_plan'] &&
-      state.objectPermissionsDict['bpms.view_public_plan'].includes(Number(id)));
+      state.objectPermissionsDict['bpms.view_public_plan']?.length > 0);
     console.log('Права на просмотр планов:', state.canViewPublicPlan)
 
     state.canViewPublicTask = state.globalPermissionsList.includes('bpms.view_public_task') ||
       (state.objectPermissionsDict['bpms.view_public_task'] &&
-      state.objectPermissionsDict['bpms.view_public_task'].includes(Number(id)));
+      state.objectPermissionsDict['bpms.view_public_task']?.length > 0);
     console.log('Права на просмотр заданий:', state.canViewPublicTask);
 
     state.canViewFile = state.globalPermissionsList.includes('files.view_file') ||
       (state.objectPermissionsDict['files.view_file'] &&
-      state.objectPermissionsDict['files.view_file'].includes(Number(id)));
+      state.objectPermissionsDict['files.view_file']?.length > 0);
     console.log('Права на просмотр файлов:', state.canViewFile);
 
     state.canViewNew = state.globalPermissionsList.includes('news.view_new') ||
       (state.objectPermissionsDict['news.view_new'] &&
-      state.objectPermissionsDict['news.view_new'].includes(Number(id)));
+      state.objectPermissionsDict['news.view_new']?.length > 0);
     console.log('Права на просмотр аккаунтов:', state.canViewNew);
 
     state.canViewMaterial = state.globalPermissionsList.includes('materials.view_material') ||
       (state.objectPermissionsDict['materials.view_material'] &&
-      state.objectPermissionsDict['materials.view_material'].includes(Number(id)));
+      state.objectPermissionsDict['materials.view_material']?.length > 0);
     console.log('Права на просмотр аккаунтов:', state.canViewMaterial);
 
     state.canViewCourse = state.globalPermissionsList.includes('courses.view_course') ||
       (state.objectPermissionsDict['courses.view_course'] &&
-      state.objectPermissionsDict['courses.view_course'].includes(Number(id)));
+      state.objectPermissionsDict['courses.view_course']?.length > 0);
     console.log('Права на просмотр курсов:', state.canViewCourse);
 
     state.canViewTest = state.globalPermissionsList.includes('tests.view_test') ||
       (state.objectPermissionsDict['tests.view_test'] &&
-      state.objectPermissionsDict['tests.view_test'].includes(Number(id)));
+      state.objectPermissionsDict['tests.view_test']?.length > 0);
     console.log('Права на просмотр аккаунтов:', state.canViewTest);
 
     state.canViewQuestion = state.globalPermissionsList.includes('tests.view_question') ||
       (state.objectPermissionsDict['tests.view_question'] &&
-      state.objectPermissionsDict['tests.view_question'].includes(Number(id)));
+      state.objectPermissionsDict['tests.view_question']?.length > 0);
     console.log('Права на просмотр вопросов:', state.canViewQuestion);
 
     state.canViewEventTemplate = state.globalPermissionsList.includes('events.view_event_template') ||
       (state.objectPermissionsDict['events.view_event_template'] &&
-      state.objectPermissionsDict['events.view_event_template'].includes(Number(id)));
+      state.objectPermissionsDict['events.view_event_template']?.length > 0);
     console.log('Права на просмотр аккаунтов:', state.canViewEventTemplate);
 
     state.canViewEventSlot = state.globalPermissionsList.includes('events.view_event_slot') ||
       (state.objectPermissionsDict['events.view_event_slot'] &&
-      state.objectPermissionsDict['events.view_event_slot'].includes(Number(id)));
+      state.objectPermissionsDict['events.view_event_slot']?.length > 0);
     console.log('Права на просмотр аккаунтов:', state.canViewEventSlot);
 
     state.canViewContent = (
@@ -742,12 +742,12 @@ const loadUserPermissions = async () => {
 
     state.canViewChat = state.globalPermissionsList.includes('chats.view_chat') ||
       (state.objectPermissionsDict['chats.view_chat'] &&
-      state.objectPermissionsDict['chats.view_chat'].includes(Number(id)));
+      state.objectPermissionsDict['chats.view_chat']?.length > 0);
     console.log('Права на просмотр чата:', state.canViewChat);
 
     state.canViewTopic = state.globalPermissionsList.includes('comments.view_topic') ||
       (state.objectPermissionsDict['comments.view_topic'] &&
-      state.objectPermissionsDict['comments.view_topic'].includes(Number(id)));
+      state.objectPermissionsDict['comments.view_topic']?.length > 0);
     console.log('Права на просмотр топика:', state.canViewTopic);
 
     state.canViewTalking = (
@@ -758,32 +758,32 @@ const loadUserPermissions = async () => {
 
     state.canViewClient = state.globalPermissionsList.includes('core.view_client') ||
       (state.objectPermissionsDict['core.view_client'] &&
-      state.objectPermissionsDict['core.view_client'].includes(Number(id)));
+      state.objectPermissionsDict['core.view_client']?.length > 0);
     console.log('Права на просмотр клиент:', state.canViewClient);
 
     state.canViewAccount = state.globalPermissionsList.includes('core.view_account') ||
       (state.objectPermissionsDict['core.view_account'] &&
-      state.objectPermissionsDict['core.view_account'].includes(Number(id)));
+      state.objectPermissionsDict['core.view_account']?.length > 0);
     console.log('Права на просмотр аккаунтов:', state.canViewAccount);
 
     state.canViewAccountGroup = state.globalPermissionsList.includes('core.view_accounts_group') ||
       (state.objectPermissionsDict['core.view_accounts_group'] &&
-      state.objectPermissionsDict['core.view_accounts_group'].includes(Number(id)));
+      state.objectPermissionsDict['core.view_accounts_group']?.length > 0);
     console.log('Права на просмотр групп:', state.canViewAccountGroup);
 
     state.canViewOrganization = state.globalPermissionsList.includes('core.view_organization') ||
       (state.objectPermissionsDict['core.view_organization'] &&
-      state.objectPermissionsDict['core.view_organization'].includes(Number(id)));
+      state.objectPermissionsDict['core.view_organization']?.length > 0);
     console.log('Права на просмотр организаций:', state.canViewOrganization);
 
     state.canViewSubdivision = state.globalPermissionsList.includes('core.view_subdivision') ||
       (state.objectPermissionsDict['core.view_subdivision'] &&
-      state.objectPermissionsDict['core.view_subdivision'].includes(Number(id)));
+      state.objectPermissionsDict['core.view_subdivision']?.length > 0);
     console.log('Права на просмотр подразделений:', state.canViewSubdivision);
 
     state.canViewPosition = state.globalPermissionsList.includes('core.view_position') ||
       (state.objectPermissionsDict['core.view_position'] &&
-      state.objectPermissionsDict['core.view_position'].includes(Number(id)));
+      state.objectPermissionsDict['core.view_position']?.length > 0);
     console.log('Права на просмотр должностей:', state.canViewPosition);
 
     state.canViewAccountPermission = state.globalPermissionsList.includes('auth.view_permission') || !!state.objectPermissionsDict['auth.view_permission'];
@@ -802,7 +802,7 @@ const loadUserPermissions = async () => {
 
     state.canViewCategory = state.globalPermissionsList.includes('core.view_category') ||
       (state.objectPermissionsDict['core.view_category'] &&
-      state.objectPermissionsDict['core.view_category'].includes(Number(id)));
+      state.objectPermissionsDict['core.view_category']?.length > 0);
     console.log('Права на просмотр категорий:', state.canViewCategory);
 
     state.canViewSettings = true
