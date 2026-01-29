@@ -127,6 +127,8 @@ def confirm_participation(request, task_id):
         logger.exception(f"Ошибка при подтверждении участия по задаче ID={task_id}")
         return Response({"error": "Ошибка сервера", "details": str(e)}, status=500)
 
+from guardian.shortcuts import assign_perm, remove_perm
+
 @api_view(['GET','PATCH'])
 @permission_classes([AllowAny])
 def event_slot_select(request, task_id):
@@ -149,15 +151,31 @@ def event_slot_select(request, task_id):
         elif request.method == 'PATCH':
 
             event_slot_id = request.data.get('event_slot')
-            if event_slot_id:
-                event_slot = get_object_or_404(EventSlot, pk=event_slot_id)
-                if not event_slot.registration:
-                    return Response({"error": "Регистрация на слот еще не открыта"}, status=403)
+            if not event_slot_id:
+                return Response({"error": "Не передан ID слота"}, status=403)
+            event_slot = get_object_or_404(EventSlot, pk=event_slot_id)
+            if not event_slot.registration:
+                return Response({"error": "Регистрация на слот еще не открыта"}, status=403)
+
+            if task.event_slot:
+                remove_perm('events.view_event_slot', request.user, task.event_slot)
+                logger.debug(
+                    f"[EVENT_SLOT] Сняты права events.view_event_slot "
+                    f"у пользователя {request.user} со слота {task.event_slot.id}"
+                )
 
             serializer = TaskEditSerializer(task, data=request.data, partial=True, context={'request': request})
             if serializer.is_valid():
                 serializer.save()
+
+                assign_perm('events.view_event_slot', request.user, event_slot)
+                logger.debug(
+                    f"[EVENT_SLOT] Выданы права events.view_event_slot пользователю "
+                    f"{request.user} на слот {event_slot.id}"
+                )
+
                 return Response(serializer.data)
+
             return Response(serializer.errors, status=400)
 
     except Exception as e:
