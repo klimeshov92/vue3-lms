@@ -44,9 +44,6 @@ class ObjectPermission(BasePermission):
         return user
 
     def has_permission(self, request, view):
-        """
-        Проверка прав НА УРОВНЕ ЗАПРОСА (list, retrieve, create и т.д.)
-        """
         user = self.get_user(request)
         action = view.action
 
@@ -55,104 +52,67 @@ class ObjectPermission(BasePermission):
         )
 
         # ============================================================
-        # 1. ЯВНО ЗАДАННЫЕ ПРАВА ИЗ ViewSet.permission_map
+        # 1. ОПРЕДЕЛЯЕМ PERMISSION
         # ============================================================
+        perm = None
+
+        # 1.1 Явно задано во ViewSet
         if hasattr(view, 'permission_map') and action in view.permission_map:
             perm = view.permission_map[action]
+            logger.debug(f"[PERM] permission из permission_map: {perm}")
 
-            logger.debug(
-                f"[PERM_MAP] Проверка permission_map: action={action}, permission={perm}"
-            )
+        # 1.2 Fallback — по модели
+        else:
+            model = getattr(view.queryset, 'model', None)
+            logger.debug(f"[PERM] модель для fallback: {model}")
 
-            # --- 1.1 Глобальное право ---
-            has_global = user.has_perm(perm)
-            logger.debug(
-                f"[PERM_MAP] Глобальное право {perm}: {has_global}"
-            )
-
-            if has_global:
-                logger.debug("[PERM_MAP] Доступ разрешён по глобальному праву")
+            if not model:
+                logger.debug("[PERM] модель не найдена → доступ разрешён")
                 return True
 
-            # --- 1.2 LIST → объектные права ---
-            if action == 'list':
-                qs = get_objects_for_user(user, perm)
-                logger.debug(
-                    f"[PERM_MAP] Объектные права (list): найдено объектов = {qs.count()}"
-                )
-
-                if qs.exists():
-                    view.queryset = qs
-                    logger.debug("[PERM_MAP] Доступ разрешён по объектным правам (list)")
-                    return True
-
-                logger.warning("[PERM_MAP] Доступ запрещён (list)")
-                return False
-
-            # --- 1.3 retrieve / update / delete → ПРОВЕРКА ОБЪЕКТА ---
-            if action in ('retrieve', 'update', 'partial_update', 'destroy'):
-                logger.debug(
-                    "[PERM_MAP] Переходим к has_object_permission для объекта"
-                )
-                return self.has_object_permission(
-                    request, view, view.get_object()
-                )
-
-            logger.warning("[PERM_MAP] Доступ запрещён (неподдерживаемое действие)")
-            return False
+            perm = self._get_permission_codename(action, model)
+            logger.debug(f"[PERM] permission по модели: {perm}")
 
         # ============================================================
-        # 2. FALLBACK — АВТОМАТИЧЕСКИЕ ПРАВА ПО МОДЕЛИ
+        # 2. ЕСЛИ PERMISSION НЕ ТРЕБУЕТСЯ
         # ============================================================
-        model = getattr(view.queryset, 'model', None)
-        logger.debug(f"[PERM_MODEL] Модель определена: {model}")
-
-        if not model:
-            logger.debug("[PERM_MODEL] Модель не найдена → доступ разрешён")
+        if perm is None:
+            logger.debug("[PERM] permission не требуется → доступ разрешён")
             return True
 
-        perm = self._get_permission_codename(action, model)
-
-        logger.debug(
-            f"[PERM_MODEL] Проверка прав: action={action}, permission={perm}"
-        )
-
-        if not perm:
-            logger.debug("[PERM_MODEL] Для действия не требуется permission")
-            return True
-
-        # --- 2.1 Глобальное право ---
+        # ============================================================
+        # 3. ПРОВЕРКА ГЛОБАЛЬНОГО ПРАВА
+        # ============================================================
         has_global = user.has_perm(perm)
-        logger.debug(
-            f"[PERM_MODEL] Глобальное право {perm}: {has_global}"
-        )
+        logger.debug(f"[PERM] глобальное право {perm}: {has_global}")
 
         if has_global:
-            logger.debug("[PERM_MODEL] Доступ разрешён по глобальному праву")
+            logger.debug("[PERM] доступ разрешён по глобальному праву")
             return True
 
-        # --- 2.2 LIST → объектные права ---
+        # ============================================================
+        # 4. LIST → ОБЪЕКТНЫЕ ПРАВА
+        # ============================================================
         if action == 'list':
             qs = get_objects_for_user(user, perm)
-            logger.debug(
-                f"[PERM_MODEL] Объектные права (list): найдено объектов = {qs.count()}"
-            )
+            logger.debug(f"[PERM] объектные права (list): {qs.count()} объектов")
 
             if qs.exists():
                 view.queryset = qs
-                logger.debug("[PERM_MODEL] Доступ разрешён по объектным правам (list)")
+                logger.debug("[PERM] доступ разрешён по объектным правам (list)")
                 return True
 
-        # --- 2.3 retrieve / update / delete → ПРОВЕРКА ОБЪЕКТА ---
-        if action in ('retrieve', 'update', 'partial_update', 'destroy'):
-            logger.debug(
-                "[PERM_MODEL] Переходим к has_object_permission для объекта"
-            )
-            return self.has_object_permission(
-                request, view, view.get_object()
-            )
+            logger.warning("[PERM] доступ запрещён (list)")
+            return False
 
-        logger.warning("[PERM_MODEL] Доступ запрещён")
+        # ============================================================
+        # 5. RETRIEVE / UPDATE / DELETE → ПРОВЕРКА ОБЪЕКТА
+        # ============================================================
+        if action in ('retrieve', 'update', 'partial_update', 'destroy'):
+            logger.debug("[PERM] переходим к проверке объектных прав")
+            return self.has_object_permission(request, view, view.get_object())
+
+        logger.warning("[PERM] доступ запрещён (неизвестное действие)")
         return False
 
     def has_object_permission(self, request, view, obj):
