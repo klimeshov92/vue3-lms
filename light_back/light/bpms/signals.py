@@ -292,19 +292,19 @@ def send_result_notifications(sender, instance, created, **kwargs):
 
         # --- СОЗДАНИЕ ---
         if created:
-            notification_type = f'{sender.__name__.lower()}_created'
+            notification_type = 'task_created'
             send = True
 
         # --- ИЗМЕНЕНИЕ СТАТУСА ---
         elif instance._old_status != instance.status:
             if instance.status == 'completed':
-                notification_type = f'{sender.__name__.lower()}_completed'
+                notification_type = 'task_completed'
                 send = True
             elif instance.status == 'failed':
-                notification_type = f'{sender.__name__.lower()}_failed'
+                notification_type = 'task_failed'
                 send = True
             elif instance.status == 'canceled':
-                notification_type = f'{sender.__name__.lower()}_canceled'
+                notification_type = 'task_canceled'
                 send = True
 
         if not send:

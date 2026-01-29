@@ -382,6 +382,11 @@ html, body {
   padding: 16px;
 }
 
+.notification-badge {
+  font-size: 24px;
+  margin-left: 4px;
+}
+
 @media screen and (min-width: 1400px) {
   .login-outer {
     padding: 16px;

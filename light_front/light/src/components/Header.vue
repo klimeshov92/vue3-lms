@@ -24,6 +24,12 @@
           title="Открыть уведомления"
           type="button">
           <i class="fa-solid fa-bell"></i>
+          <span
+            v-if="number_notifications > 0"
+            class="notification-badge"
+          >
+            {{ number_notifications }}
+          </span>
         </button>
 
         <router-link :to="{ name: 'Cabinet' }"
@@ -467,7 +473,7 @@
                 @click="notificationRead(notification.id)"
                 class="minibutton"
               >
-                Ознакомление
+                Прочитано
               </button>
                         
             </div>
