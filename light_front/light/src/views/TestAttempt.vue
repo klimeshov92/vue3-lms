@@ -433,6 +433,13 @@ const countdown_seconds = ref('');
 let timerInterval = null;
 
 const startCountdown = async () => {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  countdown_minutes.value = '';
+  countdown_seconds.value = '';
+
   if (!state.object?.plan_end_time) return;
 
   console.log('Старт таймера'); 
