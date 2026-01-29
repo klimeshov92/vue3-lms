@@ -224,7 +224,7 @@
       <router-link :to="{ name: 'QuestionList' }" 
         @click="toggleMenu" 
         class="header-menu_link"
-        v-if="state.canViewEventTemplate">
+        v-if="state.canViewQuestion">
         <div class="header-menu_link-items-inner">
           <div>
             Вопросы
