@@ -146,7 +146,7 @@ const question_types = [
   { label: 'Сортировка', value: 'sorting' },
   { label: 'Соотвествие', value: 'compliance' },
   { label: 'Текстовый ввод', value: 'text_input' },
-  { label: 'Числовой ввод', value: 'numeric_inputn' },
+  { label: 'Числовой ввод', value: 'numeric_input' },
 ];
 
 const categories = ref([]);
