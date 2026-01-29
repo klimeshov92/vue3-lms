@@ -167,7 +167,7 @@
             </div>
 
             <div v-if="activeTab === 'tasks'" class="table-tab">
-              <div v-if="state.canAdmin">
+              <div v-if="state.canViewEventSlot">
                 <div v-if="state.object.tasks && state.object.tasks.length > 0" class="table-tab-table-outer">
                   <div class="table-tab-table-inner">
                     <table>
@@ -225,15 +225,6 @@
                 <div class="none-border">У вас нет разрешения на просмотр</div>
               </div>
 
-              <div v-if="state.canAddTask" class="tab-menu minibutton-group">
-                <router-link
-                  v-if="state.canAddTask"
-                  :to="{ name: 'TaskCreate', query: { planId: state.object.id } }"
-                  class="minibutton"
-                >
-                  Создать
-                </router-link>
-              </div>
             </div>
 
             <div v-if="activeTab === 'messages'" class="topic-tab">
