@@ -817,6 +817,8 @@ class ControlElementEditSerializer(serializers.ModelSerializer):
         validated_data['editor'] = self.context['request'].user
         return super().update(instance, validated_data)
 
+from django.utils.timezone import localtime
+
 class ControlElementEventSerializer(serializers.ModelSerializer):
     control_element = ControlElementBaseSerializer(required=False)
     event_type_display = serializers.SerializerMethodField()
@@ -847,7 +849,8 @@ class ControlElementEventSerializer(serializers.ModelSerializer):
         elif obj.event_type == 'trigger_fired':
             return f'{obj.control_element} - {obj.get_event_type_display()} - {obj.fired_trigger}'
         elif obj.event_type == 'periodic_event':
-            return f'{obj.control_element} - {obj.get_event_type_display()} - {obj.task_template} - {obj.get_period_display()} - {obj.start_time.strftime("%d.%m.%Y %H:%M")}'
+            dt = localtime(obj.start_time)
+            return f'{obj.control_element} - {obj.get_event_type_display()} - {obj.task_template} - {obj.get_period_display()} - {dt.strftime("%d.%m.%Y %H:%M")}'
         return f'{obj.control_element} - {obj.event_type}'
 
 class ControlElementEventEditSerializer(serializers.ModelSerializer):

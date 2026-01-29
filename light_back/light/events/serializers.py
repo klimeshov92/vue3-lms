@@ -168,6 +168,8 @@ class EventTemplateEditSerializer(serializers.ModelSerializer):
 
         return instance
 
+from django.utils.timezone import localtime
+
 class EventSlotBaseSerializer(serializers.ModelSerializer):
     str = serializers.SerializerMethodField()
     creator = serializers.StringRelatedField()
@@ -178,7 +180,10 @@ class EventSlotBaseSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_str(self, obj):
-        return f'{obj.event_template.name} - {obj.planned_start.strftime("%d.%m.%Y %H:%M")}'
+        if not obj.planned_start:
+            return obj.event_template.name
+        dt = localtime(obj.planned_start)
+        return f'{obj.event_template.name} - {dt.strftime("%d.%m.%Y %H:%M")}'
 
 class EventSlotSerializer(serializers.ModelSerializer):
     event_template = EventTemplateSerializer(required=False)
@@ -201,7 +206,10 @@ class EventSlotSerializer(serializers.ModelSerializer):
         return obj.get_status_display()
 
     def get_str(self, obj):
-        return f'{obj.event_template.name} - {obj.planned_start.strftime("%d.%m.%Y %H:%M")}'
+        if not obj.planned_start:
+            return obj.event_template.name
+        dt = localtime(obj.planned_start)
+        return f'{obj.event_template.name} - {dt.strftime("%d.%m.%Y %H:%M")}'
 
     def get_topic(self, obj):
         topic = Topic.objects.filter(

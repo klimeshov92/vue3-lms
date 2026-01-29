@@ -1617,6 +1617,8 @@ class ControlElementActivation(models.Model):
     def __str__(self):
         return f'{self.control_element} - {self.interaction}'
 
+from django.utils.timezone import localtime
+
 class ControlElementEvent(models.Model):
     control_element = models.ForeignKey(
         ControlElement,
@@ -1705,7 +1707,8 @@ class ControlElementEvent(models.Model):
         elif self.event_type == 'trigger_fired':
             return f'{self.control_element} - {self.get_event_type_display()} - {self.fired_trigger}'
         elif self.event_type == 'periodic_event':
-            return f'{self.control_element} - {self.get_event_type_display()} - {self.task_template} - {self.get_period_display()} - {self.start_time.strftime("%d.%m.%Y %H:%M")}'
+            dt = localtime(self.start_time)
+            return f'{self.control_element} - {self.get_event_type_display()} - {self.task_template} - {self.get_period_display()} - {dt.strftime("%d.%m.%Y %H:%M")}'
         return f'Неизвестный тип события'
 
 class ControlElementCondition(models.Model):

@@ -84,6 +84,8 @@ class EventTemplate(models.Model):
     def __str__(self):
         return f'{self.name}'
 
+from django.utils.timezone import localtime
+
 class EventSlot(models.Model):
     event_template = models.ForeignKey(
         EventTemplate,
@@ -141,5 +143,8 @@ class EventSlot(models.Model):
             ('view_event_slot', 'Может просматривать слот мероприятия'),
         )
 
-    def __str__(self):
-        return f'{self.event_template.name} - {self.planned_start.strftime("%d.%m.%Y %H:%M")}'
+    def get_str(self):
+        if not self.planned_start:
+            return self.event_template.name
+        dt = localtime(self.planned_start)
+        return f'{self.event_template.name} - {dt.strftime("%d.%m.%Y %H:%M")}'
