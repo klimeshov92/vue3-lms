@@ -605,34 +605,16 @@ const loadUserPermissions = async () => {
   }
 
   try {
-    let userPermissions = JSON.parse(localStorage.getItem('userPermissions')) || {};
-    console.log('Разрешения пользователя из памяти', userPermissions);
-    
-    if (Object.keys(userPermissions).length > 0) {
-      console.log('ID пользователя в разрешениях из памяти:', userPermissions.user_id);
+    const response = await axios.get(`${baseUrl}/user_permissions/`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-      if (!validToken && userPermissions.user_id !== 1 || validToken && validToken.user_id !== userPermissions.user_id) {
-        console.log('Разрешения пользователя из памяти не соотвествуют пользователю и будут обнулены');
-        localStorage.removeItem('userPermissions');
-        userPermissions = {};
-      } else {
-        console.log('Разрешения пользователя из памяти соотвествуют пользователю');
-      }
-    }
-
-    if (Object.keys(userPermissions).length === 0) {
-      const response = await axios.get(`${baseUrl}/user_permissions/`, {
-        headers: {
-          ...(token && { 'Authorization': `Bearer ${token}` })
-        }
-      });
-      console.log('Разрешения пользователя загружены:', response.data);
-      userPermissions = response.data
-      localStorage.setItem('userPermissions', JSON.stringify(userPermissions));
-    }
+    const userPermissions = response.data;
     
     state.globalPermissionsList = userPermissions.global_permissions || [];
     state.objectPermissionsDict = userPermissions.object_permissions || {};
+
+    localStorage.setItem('userPermissions', JSON.stringify(userPermissions));
 
     const id = route.params.id;
     console.log('ID объекта:', id);
@@ -943,7 +925,6 @@ const startAutoReload = () => {
   intervalId = setInterval(() => {
     if (auth_user_id.value) {
       checkTokenValidity();
-      checkPermissionsVersion();
       loadUserPermissions();
       loadNewNotifications();
     }
@@ -986,7 +967,6 @@ const notificationRead = async (task_notification_id) => {
 onMounted(async () => {
   console.log('Компонент смонтирован, начинаем загрузку данных...');
   try {
-    await checkPermissionsVersion();
     await loadUserPermissions();
     await loadNotifications();
     startAutoReload();
