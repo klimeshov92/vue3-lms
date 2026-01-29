@@ -25,10 +25,9 @@
           type="button">
           <i class="fa-solid fa-bell"></i>
           <span
-            v-if="number_notifications > 0"
             class="notification-badge"
           >
-            {{ number_notifications }}
+            {{ unread_notifications }}
           </span>
         </button>
 
@@ -835,6 +834,16 @@ const closeNotificationsModal = () => {
 };
 
 const number_notifications = ref(null);
+const unread_notifications = computed(() => {
+  if (notifications.value?.length > 0) {
+    return notifications.value.filter(n => 
+     !n.read
+    ).length;
+  } else {
+    return 0;
+  }
+});
+
 
 watch(auth_user_id, (val) => {
   if (val) {
