@@ -876,7 +876,7 @@ def send_answers(request, question_result_id):
         attempt_question_out = not test_attempt.question_results.exclude(Q(status='completed') | Q(status='failed')).exists()
         logger.debug(f"Вопросы закончились: {attempt_question_out}")
 
-        if attempt_time_out or attempt_question_out:
+        if (attempt_time_out or attempt_question_out) and not test_attempt.end_time:
 
             if test_attempt.status not in ['completed', 'failed', 'canceled']:
                 logger.debug(f"Попытка еще не завершена")
@@ -895,10 +895,12 @@ def send_answers(request, question_result_id):
                 if test_finished:
                     test_result.finished = True
 
-                test_attempt.end_time = timezone.now()
-                test_result.end_time = timezone.now()
-                test_attempt.save()
-                test_result.save()
+                if not test_attempt.end_time:
+                    test_attempt.end_time = timezone.now()
+                    test_attempt.save()
+                if not test_result.end_time:
+                    test_result.end_time = timezone.now()
+                    test_result.save()
                 logger.debug(f"Обновленный результат попытки: {test_attempt}")
                 logger.debug(f"Обновленный результат теста: {test_result}")
 
@@ -978,7 +980,7 @@ def test_finish(request, test_attempt_id):
                 test_attempt.status = 'failed'
             test_result.status = 'failed'
 
-        if not attempt_finished:
+        if not test_attempt.end_time:
             test_attempt.end_time = timezone.now()
             test_attempt.save()
             logger.debug(f"Обновленный результат попытки: {test_attempt}")
@@ -986,8 +988,9 @@ def test_finish(request, test_attempt_id):
         test_finished = test_result.attempts >= test_result.task.test.attempts
         if test_finished:
             test_result.finished = True
-        test_result.end_time = timezone.now()
-        test_result.save()
+        if not test_result.end_time:
+            test_result.end_time = timezone.now()
+            test_result.save()
 
         for question_result in test_attempt.question_results.all():
             if question_result.status not in ['completed', 'failed']:
