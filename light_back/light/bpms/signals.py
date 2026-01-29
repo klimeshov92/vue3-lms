@@ -148,26 +148,6 @@ def task_result_create(sender, instance, created, **kwargs):
         if settings.DEBUG:
             raise
 
-@receiver(post_save, sender=Task)
-def task_comments_create(sender, instance, created, **kwargs):
-    try:
-
-        logger.debug(f"Начало работы сигнала task_comments_create")
-        if created:
-
-            topic, topic_created = Topic.objects.get_or_create(
-                topic_type='task_topic',
-                task=instance,
-                name=f'Топик задачи {instance.name}',
-            )
-            if topic_created:
-                logger.debug(f"Топик создан: {topic.__dict__}")
-
-    except Exception as e:
-        logger.error(f"Ошибка при обработке сигнала task_comments_create: {e}", exc_info=True)
-        if settings.DEBUG:
-            raise
-
 @receiver(post_delete, sender=Task)
 def task_group_delete(sender, instance, **kwargs):
     try:
@@ -212,6 +192,51 @@ def task_template_assignment_task_create(sender, instance, created, **kwargs):
 
     except Exception as e:
         logger.error(f"Ошибка при обработке сигнала task_template_assignment_task_create: {e}", exc_info=True)
+        if settings.DEBUG:
+            raise
+
+from guardian.shortcuts import assign_perm
+
+@receiver(post_save, sender=Task)
+def task_comments_create(sender, instance, created, **kwargs):
+    try:
+        logger.debug("Начало работы сигнала task_comments_create")
+
+        if not created:
+            return
+
+        topic, topic_created = Topic.objects.get_or_create(
+            topic_type='task_topic',
+            task=instance,
+            name=f'Топик задачи {instance.name}',
+        )
+
+        if not topic_created:
+            return
+
+        logger.debug(f"Топик создан: {topic.id}")
+
+        users = set()
+
+        if instance.executor:
+            users.add(instance.executor)
+
+        users.update(instance.co_executors.all())
+        users.update(instance.controllers.all())
+        users.update(instance.observers.all())
+
+        for user in users:
+            assign_perm('comments.view_topic', user, topic)
+            logger.debug(
+                f"[TASK_TOPIC] Выданы права пользователю {user} "
+                f"на топик {topic.id}"
+            )
+
+    except Exception as e:
+        logger.error(
+            f"Ошибка при обработке сигнала task_comments_create: {e}",
+            exc_info=True
+        )
         if settings.DEBUG:
             raise
 
