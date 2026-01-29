@@ -215,40 +215,82 @@ def task_template_assignment_task_create(sender, instance, created, **kwargs):
         if settings.DEBUG:
             raise
 
-@receiver(pre_save, sender=TaskResult)
-def task_result_passing_old_condition(sender, instance, **kwargs):
+RESULT_MODELS = (
+    TaskResult,
+    PlanResult,
+    MaterialResult,
+    NewResult,
+    CourseResult,
+    EventResult,
+    TestResult,
+)
+
+@receiver(pre_save)
+def result_pre_save_store_old_state(sender, instance, **kwargs):
+    if sender not in RESULT_MODELS:
+        return
+
+    logger.debug(
+        f"[RESULT_PRE_SAVE] Обработка {sender.__name__}, instance_id={instance.pk}"
+    )
+
     if not instance.pk:
         instance._old_status = None
         instance._old_outcome = None
+        logger.debug(
+            "[RESULT_PRE_SAVE] Новый объект — старые значения сброшены"
+        )
         return
 
     old = sender.objects.get(pk=instance.pk)
-    instance._old_status = old.status
-    instance._old_outcome = old.outcome
+    instance._old_status = getattr(old, 'status', None)
+    instance._old_outcome = getattr(old, 'outcome', None)
 
-@receiver(post_save, sender=TaskResult)
-def send_task_notifications(sender, instance, created, **kwargs):
+    logger.debug(
+        f"[RESULT_PRE_SAVE] Старые значения: "
+        f"status={instance._old_status}, outcome={instance._old_outcome}"
+    )
+
+
+@receiver(post_save)
+def send_result_notifications(sender, instance, created, **kwargs):
+    if sender not in RESULT_MODELS:
+        return
+
     try:
-        send = False
+        logger.debug(
+            f"[RESULT_NOTIFY] post_save {sender.__name__}, id={instance.pk}, created={created}"
+        )
 
+        send = False
+        notification_type = None
+
+        # --- СОЗДАНИЕ ---
         if created:
-            notification_type = 'task_created'
+            notification_type = f'{sender.__name__.lower()}_created'
             send = True
 
-        if not created and instance._old_status != instance.status:
+        # --- ИЗМЕНЕНИЕ СТАТУСА ---
+        elif instance._old_status != instance.status:
             if instance.status == 'completed':
-                notification_type = 'task_completed'
+                notification_type = f'{sender.__name__.lower()}_completed'
                 send = True
-            if instance.status == 'failed':
-                notification_type = 'task_failed'
+            elif instance.status == 'failed':
+                notification_type = f'{sender.__name__.lower()}_failed'
                 send = True
-            if instance.status == 'canceled':
-                notification_type = 'task_canceled'
+            elif instance.status == 'canceled':
+                notification_type = f'{sender.__name__.lower()}_canceled'
                 send = True
 
-        if send:
+        if not send:
+            logger.debug("[RESULT_NOTIFY] Уведомление не требуется")
+            return
+
+        # --- КОНТЕКСТ (если есть task) ---
+        context = {}
+
+        if hasattr(instance, 'task'):
             task = instance.task
-
             context = {
                 "task": task,
                 "executor": task.executor,
@@ -257,30 +299,56 @@ def send_task_notifications(sender, instance, created, **kwargs):
                 "observers": task.observers.all(),
             }
 
-            process_task_notifications(notification_type=notification_type, context=context)
+        logger.debug(
+            f"[RESULT_NOTIFY] Отправка уведомления {notification_type}"
+        )
+
+        process_task_notifications(
+            notification_type=notification_type,
+            context=context
+        )
 
     except Exception as e:
         logger.error(
-            f"Ошибка в send_task_notifications: {e}",
+            f"[RESULT_NOTIFY] Ошибка: {e}",
             exc_info=True
         )
         if settings.DEBUG:
             raise
 
-@receiver(post_save, sender=TaskResult)
-def task_result_events(sender, instance, created, **kwargs):
+
+@receiver(post_save)
+def result_events(sender, instance, created, **kwargs):
+    if sender not in RESULT_MODELS:
+        return
+
     try:
+        logger.debug(
+            f"[RESULT_EVENTS] post_save {sender.__name__}, id={instance.pk}, created={created}"
+        )
+
         if created:
-            logger.debug("TaskResult создан впервые — пропускаем обработку изменений.")
+            logger.debug("[RESULT_EVENTS] Создание — события не обрабатываем")
+            return
+
+        # --- RESULT должен быть привязан к задаче ---
+        if not hasattr(instance, 'task'):
+            logger.debug("[RESULT_EVENTS] Нет task — пропускаем")
             return
 
         task = instance.task
+
         if not task.task_template or not task.interaction:
+            logger.debug("[RESULT_EVENTS] Нет task_template или interaction")
             return
 
+        # =====================================================
+        # СМЕНА СТАТУСА
+        # =====================================================
         if instance._old_status != instance.status:
             logger.debug(
-                f"Статус задачи изменён: {instance._old_status} → {instance.status}"
+                f"[RESULT_EVENTS] Статус изменён: "
+                f"{instance._old_status} → {instance.status}"
             )
 
             events = ControlElementEvent.objects.filter(
@@ -290,7 +358,7 @@ def task_result_events(sender, instance, created, **kwargs):
 
             process_events(events, task.interaction)
 
-            # Дочерние задачи
+            # --- ДОЧЕРНИЕ ---
             if task.is_child and task.plan:
                 parent_events = ControlElementEvent.objects.filter(
                     event_type='child_task_status_changed',
@@ -299,9 +367,13 @@ def task_result_events(sender, instance, created, **kwargs):
 
                 process_events(parent_events, task.plan.interaction)
 
-        if instance._old_outcome != instance.outcome:
+        # =====================================================
+        # СМЕНА ИТОГА (если есть outcome)
+        # =====================================================
+        if hasattr(instance, 'outcome') and instance._old_outcome != instance.outcome:
             logger.debug(
-                f"Итог задачи изменён: {instance._old_outcome} → {instance.outcome}"
+                f"[RESULT_EVENTS] Итог изменён: "
+                f"{instance._old_outcome} → {instance.outcome}"
             )
 
             events = ControlElementEvent.objects.filter(
@@ -313,11 +385,12 @@ def task_result_events(sender, instance, created, **kwargs):
 
     except Exception as e:
         logger.error(
-            f"Ошибка в task_result_post_save: {e}",
+            f"[RESULT_EVENTS] Ошибка: {e}",
             exc_info=True
         )
         if settings.DEBUG:
             raise
+
 
 @receiver(post_save, sender=ControlElementActivation)
 def execute_actions_on_activation(sender, instance, created, **kwargs):
