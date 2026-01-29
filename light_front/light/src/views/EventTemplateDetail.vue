@@ -45,16 +45,6 @@
             </div>
             <div class="detail-menu button-group">
 
-              <a
-                v-if="state.object.last_task"
-                :href="state.object.link"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="button"
-              >
-                Открыть слот
-              </a>
-
               <router-link 
                 v-if="state.object.last_task" 
                 :to="{ name: 'TaskDetail', params: { id: state.object.last_task.id } }"
