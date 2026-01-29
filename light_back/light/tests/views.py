@@ -895,12 +895,10 @@ def send_answers(request, question_result_id):
                 if test_finished:
                     test_result.finished = True
 
-                if not test_attempt.end_time:
-                    test_attempt.end_time = timezone.now()
-                    test_attempt.save()
-                if not test_result.end_time:
-                    test_result.end_time = timezone.now()
-                    test_result.save()
+                test_attempt.end_time = timezone.now()
+                test_attempt.save()
+                test_result.end_time = timezone.now()
+                test_result.save()
                 logger.debug(f"Обновленный результат попытки: {test_attempt}")
                 logger.debug(f"Обновленный результат теста: {test_result}")
 
@@ -980,7 +978,7 @@ def test_finish(request, test_attempt_id):
                 test_attempt.status = 'failed'
             test_result.status = 'failed'
 
-        if not test_attempt.end_time:
+        if not attempt_finished:
             test_attempt.end_time = timezone.now()
             test_attempt.save()
             logger.debug(f"Обновленный результат попытки: {test_attempt}")
@@ -988,9 +986,8 @@ def test_finish(request, test_attempt_id):
         test_finished = test_result.attempts >= test_result.task.test.attempts
         if test_finished:
             test_result.finished = True
-        if not test_result.end_time:
-            test_result.end_time = timezone.now()
-            test_result.save()
+        test_result.end_time = timezone.now()
+        test_result.save()
 
         for question_result in test_attempt.question_results.all():
             if question_result.status not in ['completed', 'failed']:
