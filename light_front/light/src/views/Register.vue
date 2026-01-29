@@ -1,6 +1,6 @@
 <template>
 
-  <div v-if="loading">
+  <div v-if="loading && !sending">
 
     <div class="form-page">
       <div class="form-header">
@@ -148,7 +148,7 @@ const form = reactive({
 });
 
 const loading = ref(false);
-
+const sending = ref(false);
 
 const isPasswordVisible = reactive({
   password: false,
@@ -201,6 +201,8 @@ const createObject = async () => {
   try {
     console.log('Отправляем данные для создания объекта:', form);
 
+    sending.value = true
+
     const jsonData = {
       username: form.username,
       email: form.email,
@@ -218,6 +220,8 @@ const createObject = async () => {
     });
 
     console.log('Объект создан:', jsonResponse.data);
+
+    sending.value = false
 
     router.push({ 
       name: 'PostRegister',
