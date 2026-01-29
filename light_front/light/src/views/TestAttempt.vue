@@ -246,7 +246,7 @@
                   <div class="test-info-text-elem">
                     <span class="test-info-text-label">Статус попытки:</span> {{ state.object.status_display ? state.object.status_display : 'Нет статуса' }}
                   </div>
-                  <div v-if="countdown_minutes && countdown_seconds" class="test-info-text-elem countdown-timer">
+                  <div v-if="countdown_minutes && countdown_seconds && !state.object?.end_time" class="test-info-text-elem countdown-timer">
                     <span class="test-info-text-label">Время попытки:</span> {{ countdown_minutes }} : {{ countdown_seconds }}
                   </div>
                   <div v-else class="test-info-text-elem countdown-timer">
