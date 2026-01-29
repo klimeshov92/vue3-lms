@@ -928,6 +928,8 @@ const startAutoReload = () => {
   intervalId = setInterval(() => {
     if (auth_user_id.value) {
       checkTokenValidity();
+      checkPermissionsVersion();
+      loadUserPermissions();
       loadNewNotifications();
     }
     console.log('Запрос на обновление сообщений отправлен:', new Date().toLocaleTimeString());
