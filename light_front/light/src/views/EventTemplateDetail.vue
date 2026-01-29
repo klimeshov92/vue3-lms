@@ -62,7 +62,7 @@
               </button>
 
               <router-link 
-                v-if="state.canEditEventTemplate && !state.object.last_task" 
+                v-if="state.canEditEventTemplate" 
                 :to="{ name: 'EventTemplateEdit', params: { id: state.object.id } }"
                 class="button"
               >
