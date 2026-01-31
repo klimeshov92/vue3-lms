@@ -41,7 +41,7 @@ import axios from 'axios';
 import { useRouter, useRoute } from 'vue-router';
 import Multiselect from 'vue-multiselect';
 import '../assets/styles/custom-multiselect.css';
-import { baseUrl, isTokenValid } from '../utils/utils';
+import { baseUrl, isTokenValid , goBackSmart } from '../utils/utils';
 
 const route = useRoute();
 const router = useRouter();
@@ -54,7 +54,7 @@ const form = reactive({
 const loading = ref(false);
 
 const cancelEdit = () => {
-  router.push({ name: 'OrganizationList' });
+  goBackSmart(router);
 };
 
 const errors = reactive({});

@@ -133,7 +133,7 @@ import axios from 'axios';
 import { useRouter, useRoute } from 'vue-router';
 import Multiselect from 'vue-multiselect';
 import '../assets/styles/custom-multiselect.css';
-import { baseUrl, frontendUrl, isTokenValid } from '../utils/utils';
+import { baseUrl, frontendUrl, isTokenValid , goBackSmart } from '../utils/utils';
 
 const route = useRoute();
 const router = useRouter();
@@ -160,7 +160,7 @@ const togglePasswordVisibility = (field) => {
 };
 
 const cancelEdit = () => {
-  router.back();
+  goBackSmart(router);
 };
 
 const siteKey = '6Lcd_j8sAAAAAOIfvcsO1dE010MxFpBjmuSpazva'

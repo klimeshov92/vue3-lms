@@ -353,7 +353,7 @@
 import { ref, reactive, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
-import { formatDate, formatDateTime, baseUrl, isTokenValid } from '../utils/utils'; 
+import { formatDate, formatDateTime, baseUrl, isTokenValid , goBackSmart } from '../utils/utils'; 
 import Multiselect from 'vue-multiselect';
 import '../assets/styles/custom-multiselect.css';
 
@@ -574,7 +574,7 @@ const selectQuestion = (question_result) => {
 };
 
 const back = () => {
-  router.back();
+  goBackSmart(router);
 };
 
 

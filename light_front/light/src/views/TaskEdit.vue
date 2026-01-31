@@ -468,7 +468,7 @@ import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import Multiselect from 'vue-multiselect';
 import '../assets/styles/custom-multiselect.css';
-import { formatDate, formatDateTime, baseUrl, isTokenValid } from '../utils/utils';
+import { formatDate, formatDateTime, baseUrl, isTokenValid , goBackSmart } from '../utils/utils';
 import EditorComponent from '../components/EditorComponent.vue';
 
 const route = useRoute();
@@ -925,7 +925,7 @@ const saveChanges = async () => {
 };
 
 const cancelEdit = () => {
-  router.back();
+  goBackSmart(router);
 };
 
 

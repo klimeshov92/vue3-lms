@@ -518,7 +518,7 @@
 import { ref, reactive, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
-import { formatDate, formatDateTime, baseUrl, isTokenValid, auth_user_id, setUserId, clearUserId } from '../utils/utils'; 
+import { formatDate, formatDateTime, baseUrl, isTokenValid, auth_user_id, setUserId, clearUserId , goBackSmart } from '../utils/utils'; 
 const route = useRoute();
 const router = useRouter();
 import '@fortawesome/fontawesome-free/css/all.css';

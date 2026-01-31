@@ -1,7 +1,7 @@
 // Импортируем необходимые функции и компоненты для маршрутизации
 import { createRouter, createWebHistory } from 'vue-router';
 import axios from 'axios';
-import { baseUrl } from '../utils/utils';
+import { baseUrl, navigationStack } from '../utils/utils';
 
 
 // Определяем массив маршрутов
@@ -1258,8 +1258,153 @@ const router = createRouter({
   routes
 });
 
+const EXCLUDED_ROUTES = [
+  // Home
+  'HomePageCreate',
+  'HomePageEdit',
+
+  // Legal / Policy
+  'LegalPageCreate',
+  'LegalPageEdit',
+  'PolicyPageCreate',
+  'PolicyPageEdit',
+
+  // Accounts
+  'AccountCreate',
+  'AccountEdit',
+
+  // Clients
+  'ClientCreate',
+  'ClientEdit',
+
+  // Categories
+  'CategoryCreate',
+  'CategoryEdit',
+
+  // Account groups
+  'AccountGroupCreate',
+  'AccountGroupEdit',
+  'CreateAccountGroupGenerator',
+  'AccountGroupGeneratorEdit',
+  'CreateAccountsGroupObjectPermission',
+  'CreateAccountObjectPermission',
+
+  // Organizations
+  'OrganizationCreate',
+  'OrganizationEdit',
+
+  // Subdivisions
+  'SubdivisionCreate',
+  'SubdivisionEdit',
+
+  // Positions
+  'PositionCreate',
+  'PositionEdit',
+
+  // Interactions
+  'InteractionCreate',
+  'InteractionEdit',
+
+  // Task templates
+  'TaskTemplateCreate',
+  'TaskTemplateEdit',
+
+  // Public tasks / plans
+  'PublicTaskCreate',
+  'PublicTaskEdit',
+  'PublicPlanCreate',
+  'PublicPlanEdit',
+
+  // Tasks
+  'TaskCreate',
+  'TaskEdit',
+  'TaskResultUpdate',
+  'PlanResultUpdate',
+
+  // Task template assignments
+  'TaskTemplateAssignmentCreate',
+
+  // Queues
+  'QueueCreate',
+  'QueueEdit',
+  'CreateQueueExecutor',
+  'QueueExecutorEdit',
+  'CreateQueueTask',
+
+  // Control elements
+  'ControlElementCreate',
+  'ControlElementEdit',
+  'CreateControlElementEvent',
+  'ControlElementEventEdit',
+  'CreateControlElementCondition',
+  'ControlElementConditionEdit',
+  'CreateControlElementAction',
+  'ControlElementActionEdit',
+
+  // Chats
+  'ChatCreate',
+  'ChatEdit',
+
+  // Topics
+  'TopicCreate',
+  'TopicEdit',
+
+  // Files
+  'FileCreate',
+  'FileEdit',
+
+  // News
+  'NewCreate',
+  'NewEdit',
+
+  // Materials
+  'MaterialCreate',
+  'MaterialEdit',
+
+  // Courses
+  'CourseCreate',
+  'CourseEdit',
+
+  // Tests
+  'TestCreate',
+  'TestEdit',
+  'TestSectionCreate',
+  'TestSectionEdit',
+  'TestSectionQuestionCreate',
+  'TestSectionQuestionEdit',
+
+  // Questions / answers
+  'QuestionCreate',
+  'QuestionEdit',
+  'AnswerCreate',
+  'AnswerEdit',
+  'RelevantPointCreate',
+  'RelevantPointEdit',
+
+  // Events
+  'EventTemplateCreate',
+  'EventTemplateEdit',
+  'EventSlotCreate',
+  'EventSlotEdit',
+]
+
+
 // Глобальный навигационный guard
 router.beforeEach(async (to, from, next) => {
+
+  if (
+    from.name &&
+    !EXCLUDED_ROUTES.includes(from.name)
+  ) {
+    const last = navigationStack.at(-1)
+    if (!last || last.fullPath !== from.fullPath) {
+      navigationStack.push({
+        name: from.name,
+        fullPath: from.fullPath,
+      })
+    }
+  }
+
   if (to.meta.requiresAuth) {
     const token = localStorage.getItem('access_token');
     if (!token) {
@@ -1287,6 +1432,7 @@ router.beforeEach(async (to, from, next) => {
         });
       }
     }
+
   } else {
     next(); // Переход к незащищённым маршрутам
   }

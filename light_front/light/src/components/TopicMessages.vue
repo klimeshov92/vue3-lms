@@ -114,7 +114,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, reactive, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router'; // Работа с роутингом
-import { formatDate, formatDateTime, baseUrl, isTokenValid } from '../utils/utils';
+import { formatDate, formatDateTime, baseUrl, isTokenValid , goBackSmart } from '../utils/utils';
 import axios from 'axios'; // Импорт axios для запросов
 import EditorComponent from '../components/EditorComponent.vue';
 

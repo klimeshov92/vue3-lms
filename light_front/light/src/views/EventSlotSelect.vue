@@ -64,7 +64,7 @@ import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import Multiselect from 'vue-multiselect';
 import '../assets/styles/custom-multiselect.css';
-import { baseUrl, isTokenValid } from '../utils/utils';
+import { baseUrl, isTokenValid , goBackSmart } from '../utils/utils';
 
 const route = useRoute();
 const router = useRouter();
@@ -170,7 +170,7 @@ const saveChanges = async () => {
 };
 
 const cancelEdit = () => {
-  router.back();
+  goBackSmart(router);
 };
 
 onMounted(async () => {

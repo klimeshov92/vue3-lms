@@ -36,7 +36,7 @@
 import { ref, reactive, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
-import { formatDate, formatDateTime, staticUrl, baseUrl, isTokenValid } from '../utils/utils'; 
+import { formatDate, formatDateTime, staticUrl, baseUrl, isTokenValid , goBackSmart } from '../utils/utils'; 
 
 const route = useRoute();
 const router = useRouter();
@@ -108,7 +108,7 @@ const enterFullscreen = () => {
 };
 
 const back = () => {
-  router.back();
+  goBackSmart(router);
 };
 
 

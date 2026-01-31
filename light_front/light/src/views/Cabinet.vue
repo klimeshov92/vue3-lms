@@ -234,7 +234,7 @@
 import { ref, reactive, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
-import { formatDate, formatDateTime, baseUrl, isTokenValid, auth_user_id, clearUserId } from '../utils/utils'; 
+import { formatDate, formatDateTime, baseUrl, isTokenValid, auth_user_id, clearUserId , goBackSmart } from '../utils/utils'; 
 
 const route = useRoute();
 const router = useRouter();
@@ -362,7 +362,7 @@ const loadUserPermissions = async () => {
 };
 
 const back = () => {
-  router.back();
+  goBackSmart(router);
 };
 
 const tabs = computed(() => [

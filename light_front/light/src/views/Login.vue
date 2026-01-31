@@ -70,7 +70,7 @@ const router = useRouter();
 const username = ref(''); // Переменная для имени пользователя
 const password = ref(''); // Переменная для пароля
 const isPasswordVisible = ref(false); // Управление видимостью пароля
-import { baseUrl, isTokenValid, setUserId, clearUserId } from '../utils/utils';
+import { baseUrl, isTokenValid, setUserId, clearUserId , goBackSmart } from '../utils/utils';
 
 const loading = ref(false);
 

@@ -1,4 +1,15 @@
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
+
+export const navigationStack = reactive([])
+
+export const goBackSmart = (router) => {
+  if (navigationStack.length) {
+    const target = navigationStack.pop()
+    router.push(target.fullPath)
+  } else {
+    router.push({ name: 'HomePage' })
+  }
+}
 
 export const auth_user_id = ref(localStorage.getItem('auth_user_id') || null);
 export function setUserId(id) {
