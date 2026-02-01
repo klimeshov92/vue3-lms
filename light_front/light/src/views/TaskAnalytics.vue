@@ -417,9 +417,10 @@ const loadTaskTemplate = async () => {
     const response = await axios.get(`${baseUrl}/task_templates/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    task_templates.value = (response.data.results || []).filter(
-      task_template => !task_template.is_child
-    );
+    task_templates.value = response.data.results || [];
+    //task_templates.value = (response.data.results || []).filter(
+    //  task_template => !task_template.is_child
+    //);
     console.log('Шаблоны задач загружены:', task_templates.value);
   } catch (error) {
     console.error('Ошибка при загрузке шаблонов задач:', error.response ? error.response.data : error.message);

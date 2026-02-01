@@ -1474,6 +1474,7 @@ textarea.form-input:disabled,
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 100%;
   height: auto;
 }
 
