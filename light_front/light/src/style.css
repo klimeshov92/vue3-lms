@@ -1464,7 +1464,7 @@ textarea.form-input:disabled,
   display: grid;
   gap: 16px;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
 }
 
 .list-card {
