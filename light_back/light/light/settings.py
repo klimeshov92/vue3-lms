@@ -124,6 +124,7 @@ INSTALLED_APPS = [
     'tests.apps.TestsConfig',
     'events.apps.EventsConfig',
     'notifications.apps.NotificationsConfig',
+    'surveys.apps.SurveysConfig',
 ]
 
 MIDDLEWARE = [

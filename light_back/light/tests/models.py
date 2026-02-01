@@ -46,7 +46,7 @@ class Test(models.Model):
 
     class Meta:
         verbose_name = 'Тест'
-        verbose_name_plural = 'Тест'
+        verbose_name_plural = 'Тесты'
         default_permissions = ()
         permissions = (
             ('add_test', 'Может добавить тест'),
