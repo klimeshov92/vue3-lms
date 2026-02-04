@@ -9,6 +9,7 @@ from news.serializers import *
 from materials.serializers import *
 from courses.serializers import *
 from tests.serializers import *
+from surveys.serializers import *
 from events.serializers import *
 from django.conf import settings
 
@@ -38,6 +39,7 @@ class TopicSerializer(serializers.ModelSerializer):
     material = MaterialSerializer(required=False)
     course = CourseSerializer(required=False)
     test = TestSerializer(required=False)
+    survey = SurveySerializer(required=False)
     event_template = EventTemplateSerializer(required=False)
     event_slot = EventSlotSerializer(required=False)
     categories = CategoryBaseSerializer(many=True, required=False)
@@ -76,6 +78,16 @@ class TopicSerializer(serializers.ModelSerializer):
 class TopicEditSerializer(serializers.ModelSerializer):
     task = serializers.PrimaryKeyRelatedField(queryset=Task.objects.all(), required=False)
     queue = serializers.PrimaryKeyRelatedField(queryset=Queue.objects.all(), required=False)
+    public_plan = serializers.PrimaryKeyRelatedField(queryset=PublicPlan.objects.all(), required=False)
+    public_task = serializers.PrimaryKeyRelatedField(queryset=PublicTask.objects.all(), required=False)
+    new = serializers.PrimaryKeyRelatedField(queryset=New.objects.all(), required=False)
+    material = serializers.PrimaryKeyRelatedField(queryset=Material.objects.all(), required=False)
+    course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all(), required=False)
+    test = serializers.PrimaryKeyRelatedField(queryset=Test.objects.all(), required=False)
+    survey = serializers.PrimaryKeyRelatedField(queryset=Survey.objects.all(), required=False)
+    event_template = serializers.PrimaryKeyRelatedField(queryset=EventTemplate.objects.all(), required=False)
+    event_slot = serializers.PrimaryKeyRelatedField(queryset=EventSlot.objects.all(), required=False)
+    categories = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), many=True, required=False)
 
     class Meta:
         model = Topic

@@ -21,17 +21,17 @@ export function clearUserId() {
   localStorage.removeItem('auth_user_id');
 }
 
-export const coreUrl = 'http://127.0.0.1:8000';
-export const baseUrl = 'http://127.0.0.1:8000/api';
-export const staticUrl = 'http://127.0.0.1:8000/static';
-export const mediaUrl = 'http://127.0.0.1:8000/media';
-export const frontendUrl = 'http://localhost:5173';
+//export const coreUrl = 'http://127.0.0.1:8000';
+//export const baseUrl = 'http://127.0.0.1:8000/api';
+//export const staticUrl = 'http://127.0.0.1:8000/static';
+//export const mediaUrl = 'http://127.0.0.1:8000/media';
+//export const frontendUrl = 'http://localhost:5173';
 
-//export const coreUrl = '';
-//export const baseUrl = '/api';
-//export const staticUrl = '/static';
-//export const mediaUrl = '/media';
-//export const frontendUrl = 'https://light-lms.ru';
+export const coreUrl = '';
+export const baseUrl = '/api';
+export const staticUrl = '/static';
+export const mediaUrl = '/media';
+export const frontendUrl = 'https://light-lms.ru';
 
 export const formatDate = (dateString) => {
   const date = new Date(dateString);

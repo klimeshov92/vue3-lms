@@ -155,14 +155,14 @@ class Question(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Вопрос'
-        verbose_name_plural = 'Вопросы'
+        verbose_name = 'Вопрос теста'
+        verbose_name_plural = 'Вопросы теста'
         default_permissions = ()
         permissions = (
-            ('add_question', 'Может добавить вопрос'),
-            ('change_question', 'Может изменить вопрос'),
-            ('delete_question', 'Может удалить вопрос'),
-            ('view_question', 'Может просматривать вопрос'),
+            ('add_question', 'Может добавить вопрос теста'),
+            ('change_question', 'Может изменить вопрос теста'),
+            ('delete_question', 'Может удалить вопрос теста'),
+            ('view_question', 'Может просматривать вопрос теста'),
         )
 
     # Строкове представление.

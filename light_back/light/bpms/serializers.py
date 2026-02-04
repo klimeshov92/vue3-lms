@@ -11,6 +11,8 @@ from courses.serializers import *
 from courses.models import *
 from tests.serializers import *
 from tests.models import *
+from surveys.serializers import *
+from surveys.models import *
 from events.serializers import *
 from events.models import *
 from chats.models import *
@@ -82,6 +84,7 @@ class TaskTemplateSerializer(serializers.ModelSerializer):
     material = MaterialBaseSerializer(required=False)
     course = CourseBaseSerializer(required=False)
     test = TestBaseSerializer(required=False)
+    survey = SurveyBaseSerializer(required=False)
     event_template = EventTemplateBaseSerializer(required=False)
     event_slot = EventSlotBaseSerializer(required=False)
     manual = serializers.CharField(required=False, style={'base_template': 'textarea.html'})
@@ -148,6 +151,7 @@ class TaskTemplateEditSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(queryset=Material.objects.all(), required=False)
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all(), required=False)
     test = serializers.PrimaryKeyRelatedField(queryset=Test.objects.all(), required=False)
+    survey = serializers.PrimaryKeyRelatedField(queryset=Survey.objects.all(), required=False)
     event_template = serializers.PrimaryKeyRelatedField(queryset=EventTemplate.objects.all(), required=False)
     event_slot = serializers.PrimaryKeyRelatedField(queryset=EventSlot.objects.all(), required=False)
     manual = serializers.CharField(required=False, style={'base_template': 'textarea.html'})
@@ -397,6 +401,7 @@ class TaskSerializer(serializers.ModelSerializer):
     material = MaterialBaseSerializer(required=False)
     course = CourseBaseSerializer(required=False)
     test = TestBaseSerializer(required=False)
+    survey = SurveyBaseSerializer(required=False)
     event_template = EventTemplateBaseSerializer(required=False)
     event_slot = EventSlotBaseSerializer(required=False)
     manual = serializers.CharField(required=False, style={'base_template': 'textarea.html'})
@@ -451,6 +456,9 @@ class TaskSerializer(serializers.ModelSerializer):
         elif obj.task_type == 'test_taking':
             result = obj.test_result
             return TestResultSerializer(result, context=self.context).data
+        elif obj.task_type == 'survey_taking':
+            result = obj.survey_result
+            return SurveyResultSerializer(result, context=self.context).data
         elif obj.task_type == 'event_participation':
             result = obj.event_result
             return EventResultSerializer(result, context=self.context).data
@@ -494,6 +502,7 @@ class TaskEditSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(queryset=Material.objects.all(), required=False)
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all(), required=False)
     test = serializers.PrimaryKeyRelatedField(queryset=Test.objects.all(), required=False)
+    survey = serializers.PrimaryKeyRelatedField(queryset=Survey.objects.all(), required=False)
     event_template = serializers.PrimaryKeyRelatedField(queryset=EventTemplate.objects.all(), required=False)
     event_slot = serializers.PrimaryKeyRelatedField(queryset=EventSlot.objects.all(), required=False)
     executor = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), required=False)
@@ -1299,6 +1308,7 @@ class AnswerResultSerializer(serializers.ModelSerializer):
     def get_str(self, obj):
         return f'{obj.answer.text} | {obj.get_status_display()}'
 
+
 class EventResultBaseSerializer(serializers.ModelSerializer):
     str = serializers.SerializerMethodField()
     creator = serializers.StringRelatedField()
@@ -1336,3 +1346,138 @@ class EventResultEditSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventResult
         fields = '__all__'
+
+class SurveyResultBaseSerializer(serializers.ModelSerializer):
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = SurveyResult
+        fields = '__all__'
+
+    def get_str(self, obj):
+        return f'{obj.task} - {obj.get_status_display()}'
+
+class SurveyResultSerializer(serializers.ModelSerializer):
+    task = ResultTaskSerializer(required=False)
+    status_display = serializers.SerializerMethodField()
+    outcome = ControlElementBaseSerializer(required=False)
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = SurveyResult
+        fields = '__all__'
+
+    def get_status_display(self, obj):
+        return obj.get_status_display()
+
+    def get_str(self, obj):
+        return f'{obj.task} - {obj.get_status_display()}'
+
+class SurveyResultEditSerializer(serializers.ModelSerializer):
+    task = serializers.PrimaryKeyRelatedField(queryset=Task.objects.all(), required=False)
+    outcome = serializers.PrimaryKeyRelatedField(queryset=ControlElement.objects.all(), required=False, allow_null=True)
+
+    class Meta:
+        model = SurveyResult
+        fields = '__all__'
+
+
+class SurveyAttemptBaseSerializer(serializers.ModelSerializer):
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = SurveyAttempt
+        fields = '__all__'
+
+    def get_str(self, obj):
+        return f'{obj.survey_result.task.survey.name} - {obj.number} - {obj.get_status_display()}'
+
+class SurveyAttemptSerializer(serializers.ModelSerializer):
+    survey_name = serializers.SerializerMethodField()
+    survey_attempts = serializers.SerializerMethodField()
+    survey_result = SurveyResultBaseSerializer(required=False)
+    status_display = serializers.SerializerMethodField()
+    survey_question_results = serializers.SerializerMethodField()
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = SurveyAttempt
+        fields = '__all__'
+
+    def get_survey_name(self, obj):
+        survey_name = obj.survey_result.task.survey.name
+        return survey_name
+
+    def get_survey_attempts(self, obj):
+        survey_attempts = obj.survey_result.task.survey.attempts
+        return survey_attempts
+
+    def get_status_display(self, obj):
+        return obj.get_status_display()
+
+    def get_survey_question_results(self, obj):
+
+        survey_question_sorting = json.loads(obj.survey_question_sorting)
+        survey_question_results = list(QuestionResult.objects.filter(
+            survey_attempt=obj,
+            survey_question_id__in=survey_question_sorting
+        ))
+        survey_question_results.sort(key=lambda qr: survey_question_sorting.index(qr.survey_question_id))
+
+        return QuestionResultSerializer(survey_question_results, many=True, context=self.context).data
+
+    def get_str(self, obj):
+        return f'{obj.survey_result.task.survey.name} - {obj.number} - {obj.get_status_display()}'
+
+class SurveyQuestionResultSerializer(serializers.ModelSerializer):
+    #survey_attempt = SurveyAttemptBaseSerializer(required=False)
+    survey_question = SurveyQuestionSerializer(required=False)
+    status_display = serializers.SerializerMethodField()
+    answer_results = serializers.SerializerMethodField()
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = SurveyQuestionResult
+        fields = '__all__'
+
+    def get_status_display(self, obj):
+        return obj.get_status_display()
+
+    def get_answer_results(self, obj):
+        survey = obj.survey_attempt.survey_result.task.survey
+        if survey.random_answers:
+            answer_results = SurveyAnswerResult.objects.filter(survey_question_result=obj).order_by('?')
+        else:
+            answer_results = SurveyAnswerResult.objects.filter(survey_question_result=obj).order_by('answer__item')
+        return SurveyAnswerResultSerializer(answer_results, many=True, context=self.context).data
+
+    def get_str(self, obj):
+        return f'{obj.survey_question.text} | {obj.get_status_display()}'
+
+
+class SurveyAnswerResultSerializer(serializers.ModelSerializer):
+    survey_answer = SurveyAnswerSerializer(required=False)
+    status_display = serializers.SerializerMethodField()
+    str = serializers.SerializerMethodField()
+    creator = serializers.StringRelatedField()
+    editor = serializers.StringRelatedField()
+
+    class Meta:
+        model = SurveyAnswerResult
+        fields = '__all__'
+
+    def get_status_display(self, obj):
+        return obj.get_status_display()
+
+    def get_str(self, obj):
+        return f'{obj.survey_answer.text} | {obj.get_status_display()}'

@@ -62,6 +62,7 @@ def assignment_task_create(instance, executor, task_template, plan=None):
         'new': task_template.new,
         'course': task_template.course,
         'test': task_template.test,
+        'survey': task_template.survey,
         'slot_select': task_template.slot_select,
         'event_template': task_template.event_template,
         'event_slot': task_template.event_slot,
@@ -183,6 +184,19 @@ def assignment_task_create(instance, executor, task_template, plan=None):
                     assign_perm('view_topic', task.executor, test_topic)
                     logger.info(
                         f"Права на топик теста {test_topic.id} назначены исполнителю {task.executor}"
+                    )
+
+            elif task.task_type == 'survey_taking' and task.survey:
+                assign_perm('view_survey', task.executor, task.survey)
+                logger.info(
+                    f"Права на опрос {task.survey.id} назначены исполнителю {task.executor}"
+                )
+
+                survey_topic = task.survey.topics.first()
+                if survey_topic:
+                    assign_perm('view_topic', task.executor, survey_topic)
+                    logger.info(
+                        f"Права на топик опроса {survey_topic.id} назначены исполнителю {task.executor}"
                     )
 
             elif task.task_type == 'course_study' and task.course:
@@ -326,6 +340,7 @@ def get_task_result(task):
         'course_study': 'course_result',
         'event_participation': 'event_result',
         'test_taking': 'test_result',
+        'survey_taking': 'survey_result',
     }
     return getattr(task, task_type_to_result.get(task.task_type, ''), None)
 

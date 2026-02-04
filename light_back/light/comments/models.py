@@ -27,6 +27,7 @@ class Topic(models.Model):
         ('material_topic', 'Топик материала'),
         ('course_topic', 'Топик курса'),
         ('test_topic', 'Топик теста'),
+        ('survey_topic', 'Топик опроса'),
         ('event_template_topic', 'Топик мероприятия'),
         ('event_slot_topic', 'Топик слота мероприятия'),
     ]
@@ -99,6 +100,15 @@ class Topic(models.Model):
         related_name='topics',
         related_query_name='topic',
         verbose_name='Тест',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    survey = models.ForeignKey(
+        Survey,
+        related_name='surveys',
+        related_query_name='survey',
+        verbose_name='Опрос',
         null=True,
         blank=True,
         on_delete=models.CASCADE

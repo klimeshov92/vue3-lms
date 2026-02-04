@@ -5,6 +5,8 @@ from materials.models import *
 from courses.models import *
 from tests.models import *
 from events.models import *
+from surveys.models import *
+from django.utils.timezone import localtime
 
 # Create your models here.
 
@@ -109,6 +111,7 @@ class TaskTemplate(models.Model):
         ('news_reading', 'Чтение новостей'),
         ('material_review', 'Ознакомление с материалом'),
         ('test_taking', 'Прохождение теста'),
+        ('survey_taking', 'Прохождение опроса'),
         ('course_study', 'Изучение курса'),
         ('event_participation', 'Участие в мероприятии'),
     ]
@@ -154,6 +157,16 @@ class TaskTemplate(models.Model):
         related_name='task_templates',
         related_query_name='task_template',
         verbose_name='Тест',
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT
+    )
+    # Выполнение опроса
+    survey = models.ForeignKey(
+        Test,
+        related_name='survey_templates',
+        related_query_name='survey_template',
+        verbose_name='Опрос',
         null=True,
         blank=True,
         on_delete=models.PROTECT
@@ -394,6 +407,7 @@ class Task(models.Model):
         ('news_reading', 'Чтение новостей'),
         ('material_review', 'Ознакомление с материалом'),
         ('test_taking', 'Прохождение теста'),
+        ('survey_taking', 'Прохождение опроса'),
         ('course_study', 'Изучение курса'),
         ('event_participation', 'Участие в мероприятии'),
     ]
@@ -436,6 +450,16 @@ class Task(models.Model):
         related_name='tasks',
         related_query_name='task',
         verbose_name='Тест',
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT
+    )
+    # Выполнение опроса
+    survey = models.ForeignKey(
+        Test,
+        related_name='surveys',
+        related_query_name='survey',
+        verbose_name='Опрос',
         null=True,
         blank=True,
         on_delete=models.PROTECT
@@ -1241,6 +1265,346 @@ class AnswerResult(models.Model):
     def __str__(self):
         return f'{self.answer.text} | {self.get_status_display()}'
 
+class SurveyResult(models.Model):
+    task = models.OneToOneField(
+        Task,
+        related_name='survey_result',
+        related_query_name='survey_result',
+        verbose_name='Задача',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    score_scaled = models.PositiveIntegerField('Балл (%)', default=0)
+    score = models.IntegerField(verbose_name='Балл', default=0)
+    STATUSES = [
+        ('waiting', 'В ожидании'),
+        ('assigned', 'Назначено'),
+        ('in_progress', 'В процессе'),
+        ('completed', 'Выполнено'),
+        ('failed', 'Провалено'),
+        ('canceled', 'Отменено'),
+    ]
+    status = models.CharField('Статус', max_length=50, choices=STATUSES, default='waiting')
+    attempts = models.PositiveIntegerField(verbose_name='Попытки', default=0)
+    finished = models.BooleanField('Окончен', default=False)
+    outcome = models.ForeignKey(
+        'ControlElement',
+        related_name='survey_results',
+        related_query_name='survey_result',
+        verbose_name='Итог задачи',
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT
+    )
+    start_time = models.DateTimeField('Начало', null=True, blank=True)
+    end_time = models.DateTimeField('Конец', null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True, verbose_name='Дата и время создания', db_index=True)
+    changed = models.DateTimeField(auto_now=True, verbose_name='Дата и время изменения', db_index=True)
+    creator = models.ForeignKey(
+        Account,
+        verbose_name='Создал',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='survey_result_creators',
+        related_query_name='survey_result_creator'
+    )
+    editor = models.ForeignKey(
+        Account,
+        verbose_name='Изменил',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='survey_result_editors',
+        related_query_name='survey_result_editor'
+    )
+
+    class Meta:
+        verbose_name = 'Результат опроса'
+        verbose_name_plural = 'Результаты опросов'
+        default_permissions = ()
+        permissions = (
+            ('add_survey_result', 'Может добавить результат опроса'),
+            ('change_survey_result', 'Может изменить результат опроса'),
+            ('delete_survey_result', 'Может удалить результат опроса'),
+            ('view_survey_result', 'Может просматривать результат опроса'),
+        )
+
+    def __str__(self):
+        return f'{self.task} - {self.get_status_display()}'
+
+class SurveyAttempt(models.Model):
+    survey_result = models.ForeignKey(
+        SurveyResult,
+        related_name='survey_attempts',
+        related_query_name='survey_attempt',
+        verbose_name='Тест',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    number = models.PositiveIntegerField(verbose_name='Номер')
+    score_scaled = models.PositiveIntegerField('Балл (%)', default=0)
+    score = models.IntegerField(verbose_name='Балл', default=0)
+    STATUSES = [
+        ('waiting', 'В ожидании'),
+        ('assigned', 'Назначено'),
+        ('in_progress', 'В процессе'),
+        ('completed', 'Выполнено'),
+        ('failed', 'Провалено'),
+        ('canceled', 'Отменено'),
+    ]
+    status = models.CharField('Статус', max_length=50, choices=STATUSES, default='waiting')
+    start_time = models.DateTimeField('Начало', null=True, blank=True)
+    plan_end_time = models.DateTimeField('Конец', null=True, blank=True)
+    survey_question_sorting = models.TextField(verbose_name='Сортировка вопросов',  default='[]')
+    end_time = models.DateTimeField('Конец', null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True, verbose_name='Дата и время создания', db_index=True)
+    changed = models.DateTimeField(auto_now=True, verbose_name='Дата и время изменения', db_index=True)
+    creator = models.ForeignKey(
+        Account,
+        verbose_name='Создал',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='survey_attempt_creators',
+        related_query_name='survey_attempt_creator'
+    )
+    editor = models.ForeignKey(
+        Account,
+        verbose_name='Изменил',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='survey_attempt_editors',
+        related_query_name='survey_attempt_editor'
+    )
+
+    class Meta:
+        verbose_name = 'Попытка опроса'
+        verbose_name_plural = 'Попытка опроса'
+        default_permissions = ()
+        permissions = (
+            ('add_survey_attempt', 'Может добавить попытку опроса'),
+            ('change_survey_attempt', 'Может изменить попытку опроса'),
+            ('delete_survey_attempt', 'Может удалить попытку опроса'),
+            ('view_survey_attempt', 'Может просматривать попытку опроса'),
+        )
+
+    def __str__(self):
+        return f'{self.survey_result.task.survey.name} - {self.number} - {self.get_status_display()}'
+
+class SurveySectionResult(models.Model):
+    survey_attempt = models.ForeignKey(
+        SurveyAttempt,
+        related_name='survey_section_results',
+        related_query_name='survey_section_result',
+        verbose_name='Попытка опроса',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    survey_section = models.ForeignKey(
+        SurveySection,
+        related_name='survey_section_results',
+        related_query_name='survey_section_result',
+        verbose_name='Вопрос',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    score = models.IntegerField(verbose_name='Балл', default=0)
+    STATUSES = [
+        #('waiting', 'В ожидании'),
+        ('assigned', 'Назначено'),
+        ('in_progress', 'В процессе'),
+        ('completed', 'Выполнено'),
+        ('failed', 'Провалено'),
+        ('canceled', 'Отменено'),
+    ]
+    status = models.CharField('Статус', max_length=50, choices=STATUSES, default='assigned')
+    start_time = models.DateTimeField('Начало', null=True, blank=True)
+    end_time = models.DateTimeField('Конец', null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True, verbose_name='Дата и время создания', db_index=True)
+    changed = models.DateTimeField(auto_now=True, verbose_name='Дата и время изменения', db_index=True)
+    creator = models.ForeignKey(
+        Account,
+        verbose_name='Создал',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='survey_section_result_creators',
+        related_query_name='survey_section_result_creator'
+    )
+    editor = models.ForeignKey(
+        Account,
+        verbose_name='Изменил',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='survey_section_result_editors',
+        related_query_name='survey_section_result_editor'
+    )
+
+    class Meta:
+        verbose_name = 'Результат секции опроса'
+        verbose_name_plural = 'Результаты секций опроса'
+        default_permissions = ()
+        permissions = (
+            ('add_survey_section_result', 'Может добавить результат секции опроса'),
+            ('change_survey_section_result', 'Может изменить результат секции опроса'),
+            ('delete_survey_section_result', 'Может удалить результат секции опроса'),
+            ('view_survey_section_result', 'Может просматривать результат секции опроса'),
+        )
+
+    def __str__(self):
+        return f'{self.survey_section.text} | {self.get_status_display()}'
+
+class SurveyQuestionResult(models.Model):
+    survey_attempt = models.ForeignKey(
+        SurveyAttempt,
+        related_name='survey_question_results',
+        related_query_name='survey_question_result',
+        verbose_name='Попытка опроса',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    survey_section_result = models.ForeignKey(
+        SurveySectionResult,
+        related_name='survey_question_results',
+        related_query_name='survey_question_result',
+        verbose_name='Результат секции опроса',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    survey_question = models.ForeignKey(
+        SurveyQuestion,
+        related_name='survey_question_results',
+        related_query_name='survey_question_result',
+        verbose_name='Вопрос',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    score = models.IntegerField(verbose_name='Балл', default=0)
+    STATUSES = [
+        #('waiting', 'В ожидании'),
+        ('assigned', 'Назначено'),
+        ('in_progress', 'В процессе'),
+        ('completed', 'Выполнено'),
+        ('failed', 'Провалено'),
+        ('canceled', 'Отменено'),
+    ]
+    status = models.CharField('Статус', max_length=50, choices=STATUSES, default='assigned')
+    start_time = models.DateTimeField('Начало', null=True, blank=True)
+    end_time = models.DateTimeField('Конец', null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True, verbose_name='Дата и время создания', db_index=True)
+    changed = models.DateTimeField(auto_now=True, verbose_name='Дата и время изменения', db_index=True)
+    creator = models.ForeignKey(
+        Account,
+        verbose_name='Создал',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='survey_question_result_creators',
+        related_query_name='survey_question_result_creator'
+    )
+    editor = models.ForeignKey(
+        Account,
+        verbose_name='Изменил',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='survey_question_result_editors',
+        related_query_name='survey_question_result_editor'
+    )
+
+    class Meta:
+        verbose_name = 'Результат вопроса опроса'
+        verbose_name_plural = 'Результаты вопросов опроса'
+        default_permissions = ()
+        permissions = (
+            ('add_survey_question_result', 'Может добавить результат вопроса опроса'),
+            ('change_survey_question_result', 'Может изменить результат вопроса опроса'),
+            ('delete_survey_question_result', 'Может удалить результат вопроса опроса'),
+            ('view_survey_question_result', 'Может просматривать результат вопроса опроса'),
+        )
+
+    def __str__(self):
+        return f'{self.survey_question.text} | {self.get_status_display()}'
+
+class SurveyAnswerResult(models.Model):
+    survey_question_result = models.ForeignKey(
+        SurveyQuestionResult,
+        related_name='survey_answer_results',
+        related_query_name='survey_answer_result',
+        verbose_name='Результат вопроса опроса',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    survey_answer = models.ForeignKey(
+        SurveyAnswer,
+        related_name='survey_answer_results',
+        related_query_name='survey_answer_result',
+        verbose_name='Ответ',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    selected_answer = models.BooleanField(verbose_name='Правильный ответ', default=False)
+    selected_position = models.PositiveIntegerField(verbose_name='Правильная позиция', null=True, blank=True)
+    selected_text_input = models.CharField(verbose_name='Правильный ответ', max_length=255, null=True, blank=True)
+    score = models.IntegerField(verbose_name='Балл', default=0)
+    STATUSES = [
+        #('waiting', 'В ожидании'),
+        ('assigned', 'Назначено'),
+        ('in_progress', 'В процессе'),
+        ('completed', 'Выполнено'),
+        ('failed', 'Провалено'),
+        ('canceled', 'Отменено'),
+    ]
+    status = models.CharField('Статус', max_length=50, choices=STATUSES, default='assigned')
+    start_time = models.DateTimeField('Начало', null=True, blank=True)
+    end_time = models.DateTimeField('Конец', null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True, verbose_name='Дата и время создания', db_index=True)
+    changed = models.DateTimeField(auto_now=True, verbose_name='Дата и время изменения', db_index=True)
+    creator = models.ForeignKey(
+        Account,
+        verbose_name='Создал',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='survey_answer_result_creators',
+        related_query_name='survey_answer_result_creator'
+    )
+    editor = models.ForeignKey(
+        Account,
+        verbose_name='Изменил',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='survey_answer_result_editors',
+        related_query_name='survey_answer_result_editor'
+    )
+
+    class Meta:
+        verbose_name = 'Результат ответа'
+        verbose_name_plural = 'Результаты ответов'
+        default_permissions = ()
+        permissions = (
+            ('add_survey_answer_result', 'Может добавить результат ответа'),
+            ('change_survey_answer_result', 'Может изменить результат ответа'),
+            ('delete_survey_answer_result', 'Может удалить результат ответа'),
+            ('view_survey_answer_result', 'Может просматривать результат ответа'),
+        )
+
+    def __str__(self):
+        return f'{self.survey_answer.text} | {self.get_status_display()}'
+
 class TaskTemplateAssignment(models.Model):
     name = models.CharField(verbose_name='Название', max_length=255, db_index=True)
     task_template = models.ForeignKey(
@@ -1616,8 +1980,6 @@ class ControlElementActivation(models.Model):
 
     def __str__(self):
         return f'{self.control_element} - {self.interaction}'
-
-from django.utils.timezone import localtime
 
 class ControlElementEvent(models.Model):
     control_element = models.ForeignKey(

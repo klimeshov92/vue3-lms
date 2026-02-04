@@ -126,6 +126,23 @@ def task_result_create(sender, instance, created, **kwargs):
                 if result_created:
                     logger.debug(f"Результат создан: {result.__dict__}")
 
+            if instance.task_type == 'survey_taking':
+
+                kwargs = {
+                    'task': instance,
+                    'creator': instance.creator,
+                }
+
+                if instance.waiting:
+                    kwargs['status'] = 'waiting'
+                else:
+                    kwargs['status'] = 'assigned'
+
+                result, result_created = SurveyResult.objects.get_or_create(**kwargs)
+
+                if result_created:
+                    logger.debug(f"Результат создан: {result.__dict__}")
+
             if instance.task_type == 'event_participation':
 
                 kwargs = {
@@ -533,6 +550,19 @@ def queue_task_executor_choice(sender, instance, created, **kwargs):
                         assign_perm('view_topic', task.executor, test_topic)
                         logger.info(
                             f"Права на топик теста {test_topic.id} назначены исполнителю {task.executor}"
+                        )
+
+                elif task.task_type == 'survey_taking' and task.survey:
+                    assign_perm('view_survey', task.executor, task.survey)
+                    logger.info(
+                        f"Права на опрос {task.survey.id} назначены исполнителю {task.executor}"
+                    )
+
+                    survey_topic = task.survey.topics.first()
+                    if survey_topic:
+                        assign_perm('view_topic', task.executor, survey_topic)
+                        logger.info(
+                            f"Права на топик опроса {survey_topic.id} назначены исполнителю {task.executor}"
                         )
 
                 elif task.task_type == 'course_study' and task.course:
